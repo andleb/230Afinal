@@ -1,0 +1,94 @@
+---
+title: "STAT 230A Final Project"
+# author: "Andrej Leban"
+# email: "andrej_leban@berkeley.edu"
+# date: "`r format(Sys.time(), '%B %d, %Y')`"
+header-includes:
+  - \usepackage{float, amsthm, amsmath, amssymb, bm, enumitem, latexsym, color, minipage-marginpar, caption, multirow, verbatim}
+output:
+  pdf_document:
+    toc: yes
+    number_sections: true
+papersize: a4
+urlcolor: blue
+# bibliography: [references.bib]
+editor_options:
+  markdown:
+    wrap: 120
+always_allow_html: true
+---
+
+```{r setup, echo = FALSE, message=FALSE, warning=FALSE}
+# load in useful packages
+library(tidyverse)
+library(viridis)
+
+# extra:
+library(gsubfn)
+library(reshape2)
+
+library(data.table)
+
+library(knitr)
+
+# set default knitr chunks
+knitr::opts_chunk$set(
+  echo = TRUE,
+  fig.align = "center",
+  fig.height = 4,
+  fig.pos = "H",
+  fig.width = 6,
+  message = FALSE,
+  warning = FALSE,
+  cache = F,
+  results = 'hide'
+)
+
+# define my_theme - append here
+my_theme <- theme_minimal()
+```
+
+`TODO: margins, font size, group name & name in upper right`
+
+<!-- LaTeX preamble -->
+  \newcommand{\E}{{\mathbb E}}
+\newcommand{\se}{{\mathcal{E}}}
+\newcommand{\R}{{\mathbb R}}
+\renewcommand{\P}{{\mathbb P}}
+\newcommand{\ac}{{\mathcal{A}}}
+\newcommand{\A}{{\mathcal{A}}}
+\newcommand{\B}{{\mathcal{B}}}
+\newcommand{\T}{{\mathcal{T}}}
+\newcommand{\Z}{{\mathcal{Z}}}
+\newcommand{\K}{{\mathcal{K}}}
+\newcommand{\lc}{{\mathcal{L}}}
+\newcommand{\Ps}{{\mathcal{P}}}
+\newcommand{\pa}{{\mathring{p}}}
+\newcommand{\F}{{\cal F}}
+\newcommand{\samp}{{\mathcal{X}}}
+\newcommand{\X}{{\mathcal{X}}}
+\newcommand{\hi}{{\hat{\Phi}}}
+
+\def\qt#1{\qquad\text{#1}}
+
+\def\argmin{\mathop{\rm argmin}}
+\def\argmax{\mathop{\rm argmax}}
+
+\setlength{\parskip}{1.4 \medskipamount}
+
+
+#  Paper Summary & Summary Statistics Table
+
+
+# Main Result Replication
+
+
+# Robustness check replication
+
+
+# "Re-analysis"
+
+
+
+
+
