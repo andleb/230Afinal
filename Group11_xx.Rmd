@@ -34,6 +34,9 @@ library(knitr)
 library(foreign)
 library(haven)
 
+library(readstata13)
+library(sf)
+
 # set default knitr chunks
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -80,13 +83,69 @@ my_theme <- theme_minimal()
 \setlength{\parskip}{1.4 \medskipamount}
 
 
-```{r, data_import, }
-table3Df <- read_dta("data_raw/Table_3b.dta")
-
+```{r data_import, echo=F}
+cells = read_sf(dsn = 'data_raw/Virtual_country', layer = 'virtual_cntrygrid')
+countries = read_sf(dsn = 'countries', layer = 'countries')
+data = read.dta13("data_raw/Tables1-3a.dta")
 ```
 
+```{r rename, echo=F}
+colnames(data) = c('countryCode', 'entryYear', 'countryName', 'avgTemp', 
+                   'avgPrecip', 'seaDist', 'avgElev', 'sdElev', 'absLat', 
+                   'erange_geconclip', 'numLang', 'suitableCells', 'suitRange',
+                   'climate', 'soil', 'sdClimate', 'sdSoil', 'sdSuitable', 
+                   'avgSuitable', 'pop95', 'area', 'lnLang', 'africa', 
+                   'europe', 'americas', 'lnPop95', 'migrationDist', 
+                   'lnArea', 'pctIndigenous', 'lnPopDens1500', 
+                   'agriTran', 'reg_eap')
+```
 
-#  Paper Summary & Summary Statistics Table
+# Paper Summary & Summary Statistics Table
+
+The paper lacks a true summary table, and shows a couple EDA figures instead. We replicate two of those figures, and then display our own summary table of the features used in the paper's first regression.
+
+Figure \ref{fig:suit} shows the distribution of land suitability for agriculture across the world, at a resolution of .5-by.5 decimal degrees.
+
+```{r, fig.cap="\\label{fig:suit} Land Quality Across Countries", echo=F}
+fig1 = ggplot(cells) + geom_sf(aes(fill = suit_new), colour = NA) +
+  scale_fill_viridis_c(direction = -1)
+fig1
+```
+
+```{r, cache=TRUE, echo=F}
+greeceCells = countries %>% filter(COUNTRY == 'Greece') %>%
+  st_intersection(y = cells)
+nepalCells = countries %>% filter(COUNTRY == 'Nepal') %>%
+  st_intersection(y = cells)
+```
+
+Figure \ref{fig:kde1} shows the distribution of land quality within two countries selected in the paper—Greece and Nepal. This was done by intersecting the cells shown in the previous figure with country boundaries, and then plotting a KDE with the Epanechnikov kernel.
+
+```{r, fig.cap="\\label{fig:kde1} Kernel Density of Land Quality in Greece and Nepal", echo=F}
+plot(density(greeceCells$suit_new, kernel = "epanechnikov"),
+  xlim = c(0, 1), xlab = 'Land quality per region', ylab = 'Density', main = '', lty = 2)
+lines(density(nepalCells$suit_new, kernel = "epanechnikov"), col = 'red')
+legend(.1, 3, legend = c('Distribution of land quality in Greece', 'Distribution of land quality in Nepal'),
+       col = c("black", "red"), lty = 2:1, cex = .75)
+```
+
+Below is our summary table of important variables. Fortunately, the data provided by the author was already processed and cleaned to the extent used in the paper. All we did was rename columns to more descriptive names. For the first regression, each unit of observation is a country. The dependent variable is `numLang`, which is the number of languages whose "traditional homeland" intersects with the country's boundary. Other variables, such as `avgSuitable` and `sdSuitable`, were aggregated from the land suitability dataset described above. Note that measures of both center and spread from the aggregation are included as features. Also included are the log of the country's 1995 population, human migration distance from Africa, and distance from a large body of water.
+
+While some other variables in the provided dataset have missing values for some countries, note that all variables included in the first regression are known for all countries.
+
+```{r summary, results='show', echo=F}
+count = function(x){ (sum(~is.na(x))) }
+data %>% select(c('numLang', 'sdElev', 'sdSuitable', 'avgElev', 'avgSuitable', 'absLat',
+'avgPrecip', 'avgTemp', 'lnArea', 'seaDist', 'migrationDist', 'lnPop95')) %>%
+  summarise_each(funs(min = min, median = median, max = max, mean = mean, 
+                      iqr = quantile(., 0.75) - quantile(., 0.25), sd = sd, n = sum(!is.na(.)))) %>%
+  gather(var, val) %>%
+  separate(var, into = c("var", "stat"), sep = "_") %>%
+  spread(var, val) %>% column_to_rownames(var="stat") %>% 
+  select(c('numLang', 'sdElev', 'sdSuitable', 'avgElev', 'avgSuitable', 'absLat',
+           'avgPrecip', 'avgTemp', 'lnArea', 'seaDist', 'migrationDist', 'lnPop95')) %>%
+  mutate_if(is.numeric, ~round(., 2)) %>% slice(5,4,2,3,7,6)
+```
 
 
 # Main Result Replication
