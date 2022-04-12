@@ -9,11 +9,14 @@ email:
 # date: "`r format(Sys.time(), '%B %d, %Y')`"
 header-includes:
   - \usepackage{float, amsthm, amsmath, amssymb, bm, enumitem, latexsym, color, minipage-marginpar, caption, multirow, verbatim}
+geometry: margin=1in
+# linestretch: 1.5
 output:
   pdf_document:
     # TODO: enable for the final writeup
     toc: no
     number_sections: true
+    df_print: kable
 papersize: a4
 urlcolor: blue
 # bibliography: [references.bib]
@@ -35,6 +38,7 @@ library(reshape2)
 library(data.table)
 
 library(knitr)
+library(kableExtra)
 
 # library(foreign)
 # library(haven)
@@ -237,9 +241,9 @@ sumTable <- data %>% select(
     )
   ) %>%
   mutate_if(is.numeric, ~ round(., 2)) %>% slice(5, 4, 2, 3, 7, 6)
-kable(sumTable[, 1:6])
-kable(sumTable[, 7:ncol(sumTable)])
-# kable(sumTable)
+knitr::kable(sumTable[, 1:6])
+knitr::kable(sumTable[, 7:ncol(sumTable)])
+# knitr::kable(sumTable)
 ```
 
 
