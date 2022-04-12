@@ -243,7 +243,6 @@ sumTable <- data %>% select(
   mutate_if(is.numeric, ~ round(., 2)) %>% slice(5, 4, 2, 3, 7, 6)
 knitr::kable(sumTable[, 1:6])
 knitr::kable(sumTable[, 7:ncol(sumTable)])
-# knitr::kable(sumTable)
 ```
 
 
@@ -254,6 +253,99 @@ knitr::kable(sumTable[, 7:ncol(sumTable)])
 
 
 <!-- # "Re-analysis" -->
+# Appendix: code
+```{r code, echo=T, eval=F}
+cells = read_sf(dsn = 'data_raw/Virtual_country', layer = 'virtual_cntrygrid')
+countries = read_sf(dsn = 'countries', layer = 'countries')
+data = read.dta13("data_raw/Tables1-3a.dta")
+
+
+colnames(data) = c('countryCode', 'entryYear', 'countryName', 'avgTemp', 
+                   'avgPrecip', 'seaDist', 'avgElev', 'sdElev', 'absLat', 
+                   'erange_geconclip', 'numLang', 'suitableCells', 'suitRange',
+                   'climate', 'soil', 'sdClimate', 'sdSoil', 'sdSuitable', 
+                   'avgSuitable', 'pop95', 'area', 'lnLang', 'africa', 
+                   'europe', 'americas', 'lnPop95', 'migrationDist', 
+                   'lnArea', 'pctIndigenous', 'lnPopDens1500', 
+                   'agriTran', 'reg_eap')
+
+greeceCells = countries %>% filter(COUNTRY == 'Greece') %>%
+  st_intersection(y = cells)
+nepalCells = countries %>% filter(COUNTRY == 'Nepal') %>%
+  st_intersection(y = cells)
+
+plot(
+  density(greeceCells$suit_new, kernel = "epanechnikov"),
+  xlim = c(0, 1),
+  xlab = 'Land quality per region',
+  ylab = 'Density',
+  main = '',
+  lty = 2
+)
+lines(density(nepalCells$suit_new, kernel = "epanechnikov"), col = 'red')
+legend(
+  .1,
+  3,
+  legend = c(
+    'Distribution of land quality in Greece',
+    'Distribution of land quality in Nepal'
+  ),
+  col = c("black", "red"),
+  lty = 2:1,
+  cex = .75
+)
+count = function(x) {
+  (sum( ~ is.na(x)))
+}
+
+sumTable <- data %>% select(
+  c(
+    'numLang',
+    'sdElev',
+    'sdSuitable',
+    'avgElev',
+    'avgSuitable',
+    'absLat',
+    'avgPrecip',
+    'avgTemp',
+    'lnArea',
+    'seaDist',
+    'migrationDist',
+    'lnPop95'
+  )
+) %>%
+  summarise_each(
+    funs(
+      min = min,
+      median = median,
+      max = max,
+      mean = mean,
+      iqr = quantile(., 0.75) - quantile(., 0.25),
+      sd = sd,
+      n = sum(!is.na(.))
+    )
+  ) %>%
+  gather(var, val) %>%
+  separate(var, into = c("var", "stat"), sep = "_") %>%
+  spread(var, val) %>% column_to_rownames(var = "stat") %>%
+  select(
+    c(
+      'numLang',
+      'sdElev',
+      'sdSuitable',
+      'avgElev',
+      'avgSuitable',
+      'absLat',
+      'avgPrecip',
+      'avgTemp',
+      'lnArea',
+      'seaDist',
+      'migrationDist',
+      'lnPop95'
+    )
+  ) %>%
+  mutate_if(is.numeric, ~ round(., 2)) %>% slice(5, 4, 2, 3, 7, 6)
+```
 
 
 
