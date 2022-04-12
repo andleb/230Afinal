@@ -147,7 +147,7 @@ and then display our own summary table of the features used in the paper's first
 Figure \ref{fig:suit} shows the distribution of land suitability for agriculture across the world at a resolution of .5-by.5 decimal degrees. 
 The dependent variable represents the probability that a particular grid cell may be cultivated. 
 
-```{r fig1, fig.cap="\\label{fig:suit} Land quality for agriculture across countries", echo=F, cache=T, fig.width = 5, fig.height=3}
+```{r fig1, fig.cap="\\label{fig:suit} Land quality for agriculture across countries", echo=F, cache=T, fig.width = 6, fig.height=4}
 fig1 = ggplot(cells) + geom_sf(aes(fill = suit_new), colour = NA) +
   scale_fill_viridis_c("Land quality", direction = -1 ) + my_theme
 fig1
