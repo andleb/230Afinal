@@ -128,26 +128,22 @@ The empirical results are obtained separately by three regressions:
 * **Adjacent regions**: To account for a potentially high "baseline" effect in some regions, adjacent regions are
   compared directly, which neutralizes region-specific fixed effects and focuses on the effect of the variables under consideration.
   
-Finally, in regions that have undergone a major demographic shift in the last 500 years, the explanatory power of the model
-is found to be significantly weaker; these regions are controlled for with a dummy variable.
-
+<!-- Finally, in regions that have undergone a major demographic shift in the last 500 years, the explanatory power of the model -->
+<!-- is found to be significantly weaker; these regions are controlled for with a dummy variable. -->
 
 ## Data statistics and summary table
 
 The data comes from multiple sources: the standard geographic data was sourced from the *Geographically Based Economic Data database*,
 the data on land quality for agriculture comes from *Ramankutty et al. (2002)*, and the data on the distribution of 
-languages comes from the *World Language Mapping System*.
-
-Fortunately, the data provided by the author was already processed and cleaned to the extent used in the paper. 
-All we did was rename columns to more descriptive names.
+languages comes from the *World Language Mapping System*. Fortunately, the data provided by the author was already processed
+and cleaned to the extent used in the paper. All we did was rename columns to more descriptive names.
 
 The paper lacks a true summary table and shows a couple of EDA figures instead. We replicate two of those figures,
 and then display our own summary table of the features used in the paper's first regression - the *cross-country model*.
-
 Figure \ref{fig:suit} shows the distribution of land suitability for agriculture across the world at a resolution of .5-by.5 decimal degrees. 
 The dependent variable represents the probability that a particular grid cell may be cultivated. 
 
-```{r fig1, fig.cap="\\label{fig:suit} Land quality for agriculture across countries", echo=F, cache=T}
+```{r fig1, fig.cap="\\label{fig:suit} Land quality for agriculture across countries", echo=F, cache=T, fig.width = 5, fig.height=3}
 fig1 = ggplot(cells) + geom_sf(aes(fill = suit_new), colour = NA) +
   scale_fill_viridis_c("Land quality", direction = -1 ) + my_theme
 fig1
@@ -160,10 +156,10 @@ nepalCells = countries %>% filter(COUNTRY == 'Nepal') %>%
   st_intersection(y = cells)
 ```
 
-Figure \ref{fig:kde1} shows the distribution of land quality within two countries selected in the paper—Greece and Nepal.
-This was done by intersecting the cells shown in the previous figure with country boundaries, and then plotting a KDE with the Epanechnikov kernel.
+Figure \ref{fig:kde1} shows the distribution of land quality within two countries selected in the paper—Greece and Nepal, 
+obtained with a KDE using the Epanechnikov kernel.
 
-```{r worldMap, fig.cap="\\label{fig:kde1} Kernel Density of Land Quality in Greece and Nepal", echo=F}
+```{r worldMap, fig.cap="\\label{fig:kde1} Kernel Density of Land Quality in Greece and Nepal", echo=F, fig.width = 5, fig.height=3}
 plot(
   density(greeceCells$suit_new, kernel = "epanechnikov"),
   xlim = c(0, 1),
@@ -187,10 +183,7 @@ legend(
 ```
 
 Below is our summary table of important variables for the first model. The dependent variable is `numLang`, which is the number of languages whose "traditional homeland" intersects with the country's boundary. Other variables, such as `avgSuitable` and `sdSuitable`, were aggregated from the land suitability dataset described above. 
-As mentioned, measures of variability within an aggregation are also included as features. Additional covariates are the log of the country's 1995 population,
-human migration distance from Africa, and distance from a large body of water.
-
-While some other variables in the provided dataset have missing values for some countries, note that all variables included in the first regression are known for all countries.
+Additional covariates are measures of centrality and variablity, the log of the country's 1995 population, human migration distance from Africa, and distance from a large body of water. While some other variables in the provided dataset have missing values for some countries, note that all variables included in the first regression are known for all countries.
 
 ```{r summary, results='show', echo=F}
 count = function(x) {
@@ -246,6 +239,7 @@ sumTable <- data %>% select(
   mutate_if(is.numeric, ~ round(., 2)) %>% slice(5, 4, 2, 3, 7, 6)
 kable(sumTable[, 1:6])
 kable(sumTable[, 7:ncol(sumTable)])
+# kable(sumTable)
 ```
 
 
