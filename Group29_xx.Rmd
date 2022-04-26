@@ -248,6 +248,58 @@ knitr::kable(sumTable[, 7:ncol(sumTable)])
 
 <!-- # Main result replication -->
 
+```{r, echo=F}
+standardize = function(vec) {return ((vec - mean(vec, na.rm = TRUE)) / sd(vec, na.rm = TRUE))}
+
+modelCols = c('entryYear', 'avgTemp', 'avgPrecip', 'seaDist', 'avgElev', 
+              'sdElev', 'absLat', 'numLang', 'suitRange', 'climate', 
+              'soil', 'sdClimate', 'sdSoil', 'sdSuitable', 'avgSuitable', 
+              'pop95', 'area', 'lnLang', 'lnPop95', 'migrationDist', 
+              'lnArea', 'pctIndigenous', 'lnPopDens1500', 'agriTran',
+              'americas', 'europe', 'africa', 'reg_eap')
+
+for (col in modelCols) {
+  data[,col] = standardize(data[,col])
+}
+```
+
+```{r}
+model1 = lm(lnLang ~ absLat, data)
+summary(model1)
+```
+
+```{r}
+model2 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat, data)
+summary(model2)
+```
+
+```{r}
+model3 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
+            + avgPrecip + avgTemp + lnArea + seaDist + migrationDist, data)
+summary(model3)
+```
+
+```{r}
+model4 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
+            + avgPrecip + avgTemp + lnArea + seaDist + migrationDist + lnPop95
+            + africa + europe + americas + reg_eap, data)
+summary(model4)
+```
+
+```{r}
+missingData = is.na(data$agriTran) | is.na(data$entryYear) | is.na(data$lnPopDens1500)
+for (col in modelCols) {
+  data[!missingData,col] = standardize(data[!missingData,col])
+}
+
+model5 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
+            + avgPrecip + avgTemp + lnArea + seaDist + migrationDist + lnPop95
+            + lnPopDens1500 + entryYear + agriTran
+            + africa + europe + americas + reg_eap, data, na.action = na.exclude)
+summary(model5)
+
+```
+
 
 <!-- # Robustness check replication -->
 
