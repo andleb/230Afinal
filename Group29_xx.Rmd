@@ -29,9 +29,9 @@ always_allow_html: true
 ---
 
 ```{r setup, echo = FALSE, message=FALSE, warning=FALSE}
-# load in useful packages
-library(tidyverse)
-library(viridis)
+library(conflicted)
+library(MASS)
+
 
 # extra:
 library(gsubfn)
@@ -46,12 +46,17 @@ library(ggrastr)
 library(readstata13)
 library(sf)
 
+library(viridis)
+library(tidyverse)
+
 def.chunk.hook  <- knitr::knit_hooks$get("chunk")
 knitr::knit_hooks$set(chunk = function(x, options) {
   x <- def.chunk.hook(x, options)
   ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
 })
 
+conflict_prefer("select", "dplyr")
+conflict_prefer("filter", "dplyr") 
 
 # set default knitr chunks
 knitr::opts_chunk$set(
@@ -109,7 +114,7 @@ data = read.dta13("data_raw/Tables1-3a.dta")
 ```{r rename, echo=F}
 colnames(data) = c('countryCode', 'entryYear', 'countryName', 'avgTemp', 
                    'avgPrecip', 'seaDist', 'avgElev', 'sdElev', 'absLat', 
-                   'erange_geconclip', 'numLang', 'suitableCells', 'suitRange',
+                   'dispElev', 'numLang', 'suitableCells', 'dispSuitable',
                    'climate', 'soil', 'sdClimate', 'sdSoil', 'sdSuitable', 
                    'avgSuitable', 'pop95', 'area', 'lnLang', 'africa', 
                    'europe', 'americas', 'lnPop95', 'migrationDist', 
@@ -260,65 +265,99 @@ knitr::kable(sumTable[, 7:ncol(sumTable)])
 
 ## Replication
 
+
 ```{r standardize, echo=F}
 standardize = function(vec) {return ((vec - mean(vec, na.rm = TRUE)) / sd(vec, na.rm = TRUE))}
 
-modelCols = c('entryYear', 'avgTemp', 'avgPrecip', 'seaDist', 'avgElev', 
-              'sdElev', 'absLat', 'numLang', 'suitRange', 'climate', 
-              'soil', 'sdClimate', 'sdSoil', 'sdSuitable', 'avgSuitable', 
-              'pop95', 'area', 'lnLang', 'lnPop95', 'migrationDist', 
-              'lnArea', 'pctIndigenous', 'lnPopDens1500', 'agriTran',
-              'americas', 'europe', 'africa', 'reg_eap')
-
+# NOTE: I'm lazy and don't want to add vars manually
+modelCols = c('entryYear', 'avgTemp', 'avgPrecip', 'seaDist', 'avgElev',
+             'sdElev', 'absLat', 'numLang', 'dispSuitable', 'climate',
+             'soil', 'sdClimate', 'sdSoil', 'sdSuitable', 'avgSuitable',
+             'pop95', 'area', 'lnLang', 'lnPop95', 'migrationDist',
+             'lnArea', 'pctIndigenous', 'lnPopDens1500', 'agriTran',
+             'americas', 'europe', 'africa', 'reg_eap')
 for (col in modelCols) {
-  data[,col] = standardize(data[,col])
+ data[,col] = standardize(data[,col])
 }
+
+# If we're standardizing all:
+# data <- data %>% mutate(across(!countryName & !countryCode , standardize))
 ```
 
-```{r, echo=F}
+```{r model1.1, echo=F}
 model1 = lm(lnLang ~ absLat, data)
+```
+```{r model1.1table, echo=F, results='show'}
 summary(model1)
 ```
 
-```{r model2, echo=F}
+```{r model1.2, echo=F}
 model2 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat, data)
+```
+```{r model1.2table, echo=F, results='show'}
 summary(model2)
 ```
 
-```{r, echo=F}
+```{r model1.3, echo=F}
 model3 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
             + avgPrecip + avgTemp + lnArea + seaDist + migrationDist, data)
+```
+```{r model1.3table, echo=F, results='show'}
 summary(model3)
 ```
 
-```{r, echo=F}
+```{r model1.4, echo=F}
 model4 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
             + avgPrecip + avgTemp + lnArea + seaDist + migrationDist + lnPop95
             + africa + europe + americas + reg_eap, data)
+```
+```{r model1.4table, echo=F, results='show'}
 summary(model4)
 ```
 
-```{r, echo=F}
+```{r model1.5, echo=F}
 missingData = is.na(data$agriTran) | is.na(data$entryYear) | is.na(data$lnPopDens1500)
 for (col in modelCols) {
-  data[!missingData,col] = standardize(data[!missingData,col])
+  data[!missingData, col] = standardize(data[!missingData,col])
 }
 
 model5 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
             + avgPrecip + avgTemp + lnArea + seaDist + migrationDist + lnPop95
             + lnPopDens1500 + entryYear + agriTran
             + africa + europe + americas + reg_eap, data, na.action = na.exclude)
-summary(model5)
+```
 
+```{r model1.5table, echo=F, results='show'}
+summary(model5)
 ```
 
 
 ## Robustness check 
 
-```{r model1Robustness, results='hide', echo=F}
-
-
+```{r model1.1Rob, results='hide', echo=F, eval=T}
+# TODO: continental FE? Assuming africa etc dummies
+# NOTE: coeffs much closer if not standardizing
+# Why do I have more observations?
+robust1.1 <- glm.nb(exp(lnLang) ~ sdElev + sdSuitable + africa + europe + americas + reg_eap
+                    , data, na.action = na.exclude)
 ```
+```{r model1.1RobTable, results='show', echo=F, eval=T}
+summary(robust1.1)
+```
+NOTE: ~ matches on the land quality coeff, but not on elevation. What to do with the theta MLE?
+
+
+```{r model1.2Rob, results='hide', echo=F, eval=T}
+# TODO: continental FE?
+# data2 <- read.dta13("data_raw/.dta")
+robust1.2 <- lm(lnLang ~ dispElev + dispSuitable + africa + europe + americas + reg_eap,
+                    data, na.action = na.exclude)
+                    
+```
+```{r model1.2RobTable, results='show', echo=F, eval=T}
+summary(robust1.2)
+```
+
 
 
 <!-- # "Re-analysis" -->
