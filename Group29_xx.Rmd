@@ -1,5 +1,7 @@
 ---
-title: "STAT 230A Replication Paper Summary"
+title: |
+  | STAT 230A Final project
+  | Replication of Michalopoulos: The Origins of Ethnolinguistic Diversity
 author: 
   - Andrej Leban, andrej_leban@berkeley.edu
   - Isaac Schmidt, ischmidt20@berkeley.edu
@@ -8,7 +10,7 @@ email:
   - "ischmidt20@berkeley.edu"
 # date: "`r format(Sys.time(), '%B %d, %Y')`"
 header-includes:
-  - \usepackage{float, amsthm, amsmath, amssymb, bm, enumitem, latexsym, color, minipage-marginpar, caption, multirow, verbatim}
+  - \usepackage{float, amsthm, amsmath, amssymb, bm, enumitem, latexsym, color, minipage-marginpar, caption, multirow, verbatim, xcolor}
 geometry: margin=1in
 # linestretch: 1.5
 output:
@@ -39,12 +41,17 @@ library(data.table)
 
 library(knitr)
 library(kableExtra)
-
-# library(foreign)
-# library(haven)
+library(ggrastr)
 
 library(readstata13)
 library(sf)
+
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
 
 # set default knitr chunks
 knitr::opts_chunk$set(
@@ -56,7 +63,8 @@ knitr::opts_chunk$set(
   message = FALSE,
   warning = FALSE,
   cache = F,
-  results = 'hide'
+  results = 'hide', 
+  size="small"
 )
 
 # define my_theme - append here
@@ -148,7 +156,7 @@ Figure \ref{fig:suit} shows the distribution of land suitability for agriculture
 The dependent variable represents the probability that a particular grid cell may be cultivated. 
 
 ```{r fig1, fig.cap="\\label{fig:suit} Land quality for agriculture across countries", echo=F, cache=T, fig.width = 6, fig.height=4}
-fig1 = ggplot(cells) + geom_sf(aes(fill = suit_new), colour = NA) +
+fig1 = ggplot(cells) + rasterize(geom_sf(aes(fill = suit_new), colour = NA), dpi=450) +
   scale_fill_viridis_c("Land quality", direction = -1 ) + my_theme
 fig1
 ```
@@ -189,7 +197,7 @@ legend(
 Below is our summary table of important variables for the first model. The dependent variable is `numLang`, which is the number of languages whose "traditional homeland" intersects with the country's boundary. Other variables, such as `avgSuitable` and `sdSuitable`, were aggregated from the land suitability dataset described above. 
 Additional covariates are measures of centrality and variablity, the log of the country's 1995 population, human migration distance from Africa, and distance from a large body of water. While some other variables in the provided dataset have missing values for some countries, note that all variables included in the first regression are known for all countries.
 
-```{r summary, results='show', echo=F}
+```{r summary, results='hide', echo=F}
 count = function(x) {
   (sum( ~ is.na(x)))
 }
@@ -241,14 +249,18 @@ sumTable <- data %>% select(
     )
   ) %>%
   mutate_if(is.numeric, ~ round(., 2)) %>% slice(5, 4, 2, 3, 7, 6)
+```
+```{r summaryPrint, results='show', echo=F}
 knitr::kable(sumTable[, 1:6])
 knitr::kable(sumTable[, 7:ncol(sumTable)])
 ```
 
 
-<!-- # Main result replication -->
+# Model 1
 
-```{r, echo=F}
+## Replication
+
+```{r standardize, echo=F}
 standardize = function(vec) {return ((vec - mean(vec, na.rm = TRUE)) / sd(vec, na.rm = TRUE))}
 
 modelCols = c('entryYear', 'avgTemp', 'avgPrecip', 'seaDist', 'avgElev', 
@@ -263,30 +275,30 @@ for (col in modelCols) {
 }
 ```
 
-```{r}
+```{r, echo=F}
 model1 = lm(lnLang ~ absLat, data)
 summary(model1)
 ```
 
-```{r}
+```{r model2, echo=F}
 model2 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat, data)
 summary(model2)
 ```
 
-```{r}
+```{r, echo=F}
 model3 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
             + avgPrecip + avgTemp + lnArea + seaDist + migrationDist, data)
 summary(model3)
 ```
 
-```{r}
+```{r, echo=F}
 model4 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
             + avgPrecip + avgTemp + lnArea + seaDist + migrationDist + lnPop95
             + africa + europe + americas + reg_eap, data)
 summary(model4)
 ```
 
-```{r}
+```{r, echo=F}
 missingData = is.na(data$agriTran) | is.na(data$entryYear) | is.na(data$lnPopDens1500)
 for (col in modelCols) {
   data[!missingData,col] = standardize(data[!missingData,col])
@@ -301,103 +313,25 @@ summary(model5)
 ```
 
 
-<!-- # Robustness check replication -->
+## Robustness check 
+
+```{r model1Robustness, results='hide', echo=F}
+
+
+```
 
 
 <!-- # "Re-analysis" -->
+
+\newpage
 # Appendix: code
-```{r code, echo=T, eval=F}
-cells = read_sf(dsn = 'data_raw/Virtual_country', layer = 'virtual_cntrygrid')
-countries = read_sf(dsn = 'countries', layer = 'countries')
-data = read.dta13("data_raw/Tables1-3a.dta")
+<!-- NOTE: add code chunks to be displayed here -->
+```{r codeAppendix, ref.label=c('data_import', 'rename', 'greeceNepal', 'worldMap', 'summary', 'standardize', 'model2'), echo=T, eval=F}
 
-
-colnames(data) = c('countryCode', 'entryYear', 'countryName', 'avgTemp', 
-                   'avgPrecip', 'seaDist', 'avgElev', 'sdElev', 'absLat', 
-                   'erange_geconclip', 'numLang', 'suitableCells', 'suitRange',
-                   'climate', 'soil', 'sdClimate', 'sdSoil', 'sdSuitable', 
-                   'avgSuitable', 'pop95', 'area', 'lnLang', 'africa', 
-                   'europe', 'americas', 'lnPop95', 'migrationDist', 
-                   'lnArea', 'pctIndigenous', 'lnPopDens1500', 
-                   'agriTran', 'reg_eap')
-
-greeceCells = countries %>% filter(COUNTRY == 'Greece') %>%
-  st_intersection(y = cells)
-nepalCells = countries %>% filter(COUNTRY == 'Nepal') %>%
-  st_intersection(y = cells)
-
-plot(
-  density(greeceCells$suit_new, kernel = "epanechnikov"),
-  xlim = c(0, 1),
-  xlab = 'Land quality per region',
-  ylab = 'Density',
-  main = '',
-  lty = 2
-)
-lines(density(nepalCells$suit_new, kernel = "epanechnikov"), col = 'red')
-legend(
-  .1,
-  3,
-  legend = c(
-    'Distribution of land quality in Greece',
-    'Distribution of land quality in Nepal'
-  ),
-  col = c("black", "red"),
-  lty = 2:1,
-  cex = .75
-)
-count = function(x) {
-  (sum( ~ is.na(x)))
-}
-
-sumTable <- data %>% select(
-  c(
-    'numLang',
-    'sdElev',
-    'sdSuitable',
-    'avgElev',
-    'avgSuitable',
-    'absLat',
-    'avgPrecip',
-    'avgTemp',
-    'lnArea',
-    'seaDist',
-    'migrationDist',
-    'lnPop95'
-  )
-) %>%
-  summarise_each(
-    funs(
-      min = min,
-      median = median,
-      max = max,
-      mean = mean,
-      iqr = quantile(., 0.75) - quantile(., 0.25),
-      sd = sd,
-      n = sum(!is.na(.))
-    )
-  ) %>%
-  gather(var, val) %>%
-  separate(var, into = c("var", "stat"), sep = "_") %>%
-  spread(var, val) %>% column_to_rownames(var = "stat") %>%
-  select(
-    c(
-      'numLang',
-      'sdElev',
-      'sdSuitable',
-      'avgElev',
-      'avgSuitable',
-      'absLat',
-      'avgPrecip',
-      'avgTemp',
-      'lnArea',
-      'seaDist',
-      'migrationDist',
-      'lnPop95'
-    )
-  ) %>%
-  mutate_if(is.numeric, ~ round(., 2)) %>% slice(5, 4, 2, 3, 7, 6)
 ```
+
+
+
 
 
 
