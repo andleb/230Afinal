@@ -49,6 +49,7 @@ library(sf)
 library(viridis)
 library(tidyverse)
 
+# NOTE: this is to make only the displayed code smaller
 def.chunk.hook  <- knitr::knit_hooks$get("chunk")
 knitr::knit_hooks$set(chunk = function(x, options) {
   x <- def.chunk.hook(x, options)
@@ -119,7 +120,7 @@ colnames(data) = c('countryCode', 'entryYear', 'countryName', 'avgTemp',
                    'avgSuitable', 'pop95', 'area', 'lnLang', 'africa', 
                    'europe', 'americas', 'lnPop95', 'migrationDist', 
                    'lnArea', 'pctIndigenous', 'lnPopDens1500', 
-                   'agriTran', 'reg_eap')
+                   'agriTran', 'asiaPac')
 ```
 
 # Paper summary & summary statistics table
@@ -268,31 +269,30 @@ knitr::kable(sumTable[, 7:ncol(sumTable)])
 
 ```{r standardize, echo=F}
 standardize = function(vec) {return ((vec - mean(vec, na.rm = TRUE)) / sd(vec, na.rm = TRUE))}
-
-# NOTE: I'm lazy and don't want to add vars manually
+ 
 modelCols = c('entryYear', 'avgTemp', 'avgPrecip', 'seaDist', 'avgElev',
              'sdElev', 'absLat', 'numLang', 'dispSuitable', 'climate',
              'soil', 'sdClimate', 'sdSoil', 'sdSuitable', 'avgSuitable',
              'pop95', 'area', 'lnLang', 'lnPop95', 'migrationDist',
              'lnArea', 'pctIndigenous', 'lnPopDens1500', 'agriTran',
-             'americas', 'europe', 'africa', 'reg_eap')
-for (col in modelCols) {
- data[,col] = standardize(data[,col])
-}
+             'americas', 'europe', 'africa', 'asiaPac')
+# for (col in modelCols) {
+#  data[,col] = standardize(data[,col])
+# }
 
-# If we're standardizing all:
-# data <- data %>% mutate(across(!countryName & !countryCode , standardize))
+# NOTE: Easier to say what we're not standardizing; also for the robustness checks we need to keep a non-standardized copy
+dataStd <- data %>% mutate(across(!countryName & !countryCode , standardize))
 ```
 
 ```{r model1.1, echo=F}
-model1 = lm(lnLang ~ absLat, data)
+model1 = lm(lnLang ~ absLat, dataStd)
 ```
 ```{r model1.1table, echo=F, results='show'}
 summary(model1)
 ```
 
 ```{r model1.2, echo=F}
-model2 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat, data)
+model2 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat, dataStd)
 ```
 ```{r model1.2table, echo=F, results='show'}
 summary(model2)
@@ -300,7 +300,7 @@ summary(model2)
 
 ```{r model1.3, echo=F}
 model3 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
-            + avgPrecip + avgTemp + lnArea + seaDist + migrationDist, data)
+            + avgPrecip + avgTemp + lnArea + seaDist + migrationDist, dataStd)
 ```
 ```{r model1.3table, echo=F, results='show'}
 summary(model3)
@@ -309,22 +309,22 @@ summary(model3)
 ```{r model1.4, echo=F}
 model4 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
             + avgPrecip + avgTemp + lnArea + seaDist + migrationDist + lnPop95
-            + africa + europe + americas + reg_eap, data)
+            + africa + europe + americas + asiaPac, dataStd)
 ```
 ```{r model1.4table, echo=F, results='show'}
 summary(model4)
 ```
 
 ```{r model1.5, echo=F}
-missingData = is.na(data$agriTran) | is.na(data$entryYear) | is.na(data$lnPopDens1500)
+missingData = is.na(dataStd$agriTran) | is.na(dataStd$entryYear) | is.na(dataStd$lnPopDens1500)
 for (col in modelCols) {
-  data[!missingData, col] = standardize(data[!missingData,col])
+  dataStd[!missingData, col] = standardize(dataStd[!missingData,col])
 }
 
 model5 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
             + avgPrecip + avgTemp + lnArea + seaDist + migrationDist + lnPop95
             + lnPopDens1500 + entryYear + agriTran
-            + africa + europe + americas + reg_eap, data, na.action = na.exclude)
+            + africa + europe + americas + asiaPac, dataStd, na.action = na.exclude)
 ```
 
 ```{r model1.5table, echo=F, results='show'}
@@ -335,27 +335,66 @@ summary(model5)
 ## Robustness check 
 
 ```{r model1.1Rob, results='hide', echo=F, eval=T}
-# TODO: continental FE? Assuming africa etc dummies
-# NOTE: coeffs much closer if not standardizing
-# Why do I have more observations?
-robust1.1 <- glm.nb(exp(lnLang) ~ sdElev + sdSuitable + africa + europe + americas + reg_eap
+robust1.1 <- glm.nb(numLang ~ absLat + sdSuitable + sdElev + avgElev + avgSuitable + avgPrecip + avgTemp + lnArea 
+                    + seaDist + migrationDist + lnPop95 + lnPopDens1500 + entryYear + agriTran + 
+                      africa + europe + americas + asiaPac
                     , data, na.action = na.exclude)
 ```
 ```{r model1.1RobTable, results='show', echo=F, eval=T}
 summary(robust1.1)
 ```
-NOTE: ~ matches on the land quality coeff, but not on elevation. What to do with the theta MLE?
+NOTE: Matches!
 
 
 ```{r model1.2Rob, results='hide', echo=F, eval=T}
-# TODO: continental FE?
-# data2 <- read.dta13("data_raw/.dta")
-robust1.2 <- lm(lnLang ~ dispElev + dispSuitable + africa + europe + americas + reg_eap,
-                    data, na.action = na.exclude)
+robust1.2 <- lm(lnLang ~ absLat + dispElev + dispSuitable + avgElev + avgSuitable + avgPrecip +  avgTemp +  
+                lnArea +  seaDist + migrationDist +  lnPop95 + + lnPopDens1500 + entryYear + agriTran + 
+                africa + europe + americas + asiaPac,
+                data, na.action = na.exclude)
                     
 ```
 ```{r model1.2RobTable, results='show', echo=F, eval=T}
 summary(robust1.2)
+```
+NOTE: matches or exceeds in significance, as well
+
+```{r model1.3Rob, results='hide', echo=F, eval=T}
+robust1.3 <- lm(lnLang ~ absLat + sdElev + sdClimate + avgElev + climate + avgPrecip +  avgTemp +  
+                lnArea +  seaDist + migrationDist +  lnPop95 +  lnPopDens1500 + entryYear + agriTran + 
+                africa + europe + americas + asiaPac,
+                data, na.action = na.exclude)
+                    
+```
+```{r model1.3RobTable, results='show', echo=F, eval=T}
+summary(robust1.3)
+```
+
+NOTE: matches!
+
+
+```{r model1.4Rob, results='hide', echo=F, eval=T}
+# NOTE: the conditional doesn't remove anything from the `data` df
+data1.4 <- data[(data$suitableCells > 9) & (data$lnArea > -10), ]
+
+robust1.4 <- lm(lnLang ~ absLat + sdElev + sdSoil + avgElev + soil + avgPrecip +  avgTemp +  
+                lnArea +  seaDist + migrationDist +  lnPop95 +  lnPopDens1500 + entryYear + agriTran + 
+                africa + europe + americas + asiaPac,
+                data1.4, na.action = na.exclude)
+                    
+```
+```{r model1.4RobTable, results='show', echo=F, eval=T}
+summary(robust1.4)
+```
+NOTE: matches!
+
+
+
+
+
+
+
+```{r data_import2b, echo=F, eval=F}
+data2b <- read.dta13("data_raw/Table_3b.dta")
 ```
 
 
@@ -365,7 +404,7 @@ summary(robust1.2)
 \newpage
 # Appendix: code
 <!-- NOTE: add code chunks to be displayed here -->
-```{r codeAppendix, ref.label=c('data_import', 'rename', 'greeceNepal', 'worldMap', 'summary', 'standardize', 'model2'), echo=T, eval=F}
+```{r codeAppendix, ref.label=c('data_import', 'rename', 'greeceNepal', 'worldMap', 'summary', 'standardize', 'model2', 'model1.1Rob', 'model1.2Rob', 'model1.3Rob', 'model1.4Rob'), echo=T, eval=F}
 
 ```
 
