@@ -334,6 +334,9 @@ summary(model5)
 
 ## Robustness check 
 
+
+### Table 2A
+
 ```{r model1.1Rob, results='hide', echo=F, eval=T}
 robust1.1 <- glm.nb(numLang ~ absLat + sdSuitable + sdElev + avgElev + avgSuitable + avgPrecip + avgTemp + lnArea 
                     + seaDist + migrationDist + lnPop95 + lnPopDens1500 + entryYear + agriTran + 
@@ -388,23 +391,117 @@ summary(robust1.4)
 NOTE: matches!
 
 
+### Table 2B
 
-
-
-
-
-```{r data_import2b, echo=F, eval=F}
+```{r data_import2b, echo=F, eval=T}
 data2b <- read.dta13("data_raw/Table_3b.dta")
+
+standardized <- list("lpd1500", "yrentry", "agritran", "elf", "elf3", "elf5", "elf7", "elf9",
+                     "abs_lat", "sd_climsuit", "sd_emean", "emean", "mean_climsuit", "precav",
+                     "tempav", "lnareakm2", "distc", "migdist", "lnpop95", "americas", "reg_eap",
+                     "africa", "europe", "nmbr_climsuit")
+
+notStdized <- names(data2b)[! names(data2b) %in%  standardized]
+data2bStd <- data2b %>% mutate(across(! all_of(notStdized) , standardize))
+
 ```
 
+`TODO: write up a bit about the datasets used here`
 
+
+```{r model1.2.1, results='hide', echo=F, eval=T}
+robust1.2.1 <- lm(elf ~ abs_lat, data2bStd, na.action = na.exclude)
+
+```
+```{r model1.2.1Table, results='show', echo=F, eval=T}
+summary(robust1.2.1)
+```
+
+OK
+
+```{r model1.2.2, results='hide', echo=F, eval=T}
+robust1.2.2 <- lm(elf ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit,
+                  data2bStd, na.action = na.exclude)
+
+```
+```{r model1.2.2Table, results='show', echo=F, eval=T}
+summary(robust1.2.2)
+```
+OK
+
+
+```{r model1.2.3, results='hide', echo=F, eval=T}
+robust1.2.3 <- lm(elf ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit + 
+                  precav + tempav + lnareakm2 + distc + migdist + lnpop95 + lpd1500 + yrentry + agritran + 
+                  africa + europe + americas + reg_eap
+                  , data2bStd, na.action = na.exclude)
+
+```
+```{r model1.2.3Table, results='show', echo=F, eval=T}
+summary(robust1.2.3)
+```
+OK
+
+```{r model1.2.4, results='hide', echo=F, eval=T}
+robust1.2.4 <- lm(elf3 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit + 
+                  precav + tempav + lnareakm2 + distc + migdist + lnpop95 + lpd1500 + yrentry + agritran + 
+                  africa + europe + americas + reg_eap
+                  , data2bStd, na.action = na.exclude)
+
+```
+```{r model1.2.4Table, results='show', echo=F, eval=T}
+summary(robust1.2.4)
+```
+
+OK
+
+```{r model1.2.5, results='hide', echo=F, eval=T}
+robust1.2.5 <- lm(elf5 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit + 
+                  precav + tempav + lnareakm2 + distc + migdist + lnpop95 + lpd1500 + yrentry + agritran + 
+                  africa + europe + americas + reg_eap
+                  , data2bStd, na.action = na.exclude)
+
+```
+```{r model1.2.5Table, results='show', echo=F, eval=T}
+summary(robust1.2.5)
+```
+
+OK
+
+
+```{r model1.2.6, results='hide', echo=F, eval=T}
+robust1.2.6 <- lm(elf7 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit + 
+                  precav + tempav + lnareakm2 + distc + migdist + lnpop95 + lpd1500 + yrentry + agritran + 
+                  africa + europe + americas + reg_eap
+                  , data2bStd, na.action = na.exclude)
+
+```
+```{r model1.2.6Table, results='show', echo=F, eval=T}
+summary(robust1.2.6)
+```
+
+OK
+
+
+```{r model1.2.7, results='hide', echo=F, eval=T}
+robust1.2.7 <- lm(elf9 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit + 
+                  precav + tempav + lnareakm2 + distc + migdist + lnpop95 + lpd1500 + yrentry + agritran + 
+                  africa + europe + americas + reg_eap
+                  , data2bStd, na.action = na.exclude)
+
+```
+```{r model1.2.Table, results='show', echo=F, eval=T}
+summary(robust1.2.7)
+```
+
+OK
 
 <!-- # "Re-analysis" -->
 
 \newpage
 # Appendix: code
 <!-- NOTE: add code chunks to be displayed here -->
-```{r codeAppendix, ref.label=c('data_import', 'rename', 'greeceNepal', 'worldMap', 'summary', 'standardize', 'model2', 'model1.1Rob', 'model1.2Rob', 'model1.3Rob', 'model1.4Rob'), echo=T, eval=F}
+```{r codeAppendix, ref.label=c('data_import', 'rename', 'greeceNepal', 'worldMap', 'summary', 'standardize', 'model1.1', 'model1.2', 'model1.3', 'model1.4', 'model1.5', 'model1.1Rob', 'model1.2Rob', 'model1.3Rob', 'model1.4Rob', 'data_import2b', 'model1.2.1', 'model1.2.2', 'model1.2.3', 'model1.2.4', 'model1.2.5', 'model1.2.6', 'model1.2.7'), echo=T, eval=F}
 
 ```
 
