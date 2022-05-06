@@ -31,7 +31,8 @@ always_allow_html: true
 ```{r setup, echo = FALSE, message=FALSE, warning=FALSE}
 library(conflicted)
 library(MASS)
-
+library(sandwich)
+library(lmtest)
 
 # extra:
 library(gsubfn)
@@ -106,13 +107,13 @@ my_theme <- theme_minimal()
 \setlength{\parskip}{1.4 \medskipamount}
 
 
-```{r data_import, echo=F}
+```{r dataImport1, echo=F}
 cells = read_sf(dsn = 'data_raw/Virtual_country', layer = 'virtual_cntrygrid')
 countries = read_sf(dsn = 'countries', layer = 'countries')
 data = read.dta13("data_raw/Tables1-3a.dta")
 ```
 
-```{r rename, echo=F}
+```{r rename1, echo=F}
 colnames(data) = c('countryCode', 'entryYear', 'countryName', 'avgTemp', 
                    'avgPrecip', 'seaDist', 'avgElev', 'sdElev', 'absLat', 
                    'dispElev', 'numLang', 'suitableCells', 'dispSuitable',
@@ -262,12 +263,11 @@ knitr::kable(sumTable[, 7:ncol(sumTable)])
 ```
 
 
-# Model 1
+# Analysis 1: Cross-Country
 
 ## Replication
 
-
-```{r standardize, echo=F}
+```{r standardize1, echo=F}
 standardize = function(vec) {return ((vec - mean(vec, na.rm = TRUE)) / sd(vec, na.rm = TRUE))}
  
 modelCols = c('entryYear', 'avgTemp', 'avgPrecip', 'seaDist', 'avgElev',
@@ -281,12 +281,13 @@ modelCols = c('entryYear', 'avgTemp', 'avgPrecip', 'seaDist', 'avgElev',
 # }
 
 # NOTE: Easier to say what we're not standardizing; also for the robustness checks we need to keep a non-standardized copy
-dataStd <- data %>% mutate(across(!countryName & !countryCode , standardize))
+dataStd = data %>% mutate(across(!countryName & !countryCode , standardize))
 ```
 
 ```{r model1.1, echo=F}
 model1 = lm(lnLang ~ absLat, dataStd)
 ```
+
 ```{r model1.1table, echo=F, results='show'}
 summary(model1)
 ```
@@ -294,6 +295,7 @@ summary(model1)
 ```{r model1.2, echo=F}
 model2 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat, dataStd)
 ```
+
 ```{r model1.2table, echo=F, results='show'}
 summary(model2)
 ```
@@ -302,6 +304,7 @@ summary(model2)
 model3 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
             + avgPrecip + avgTemp + lnArea + seaDist + migrationDist, dataStd)
 ```
+
 ```{r model1.3table, echo=F, results='show'}
 summary(model3)
 ```
@@ -311,6 +314,7 @@ model4 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
             + avgPrecip + avgTemp + lnArea + seaDist + migrationDist + lnPop95
             + africa + europe + americas + asiaPac, dataStd)
 ```
+
 ```{r model1.4table, echo=F, results='show'}
 summary(model4)
 ```
@@ -496,12 +500,133 @@ summary(robust1.2.7)
 
 OK
 
+# Analysis 2: Virtual Country
+
+```{r dataImport2, echo=F}
+data2 = read.dta13('data_raw/Tables4-7b.dta')
+greg = read.csv('greg.csv')
+colnames(greg) = c('uniq_cnt25', 'number_suit_valid25', 'nmbrlang')
+
+data2 = data2 %>% select(-c('nmbrlang', 'number_suit_valid25')) %>% merge(greg, by = 'uniq_cnt25')
+
+data2$lnnmbrlang = log(data2$nmbrlang)
+```
+
+```{r rename2, echo=F}
+colnames(data2) = c('virtCode', 'countryCode', 'climate', 'soil',
+                   'sdClimate', 'sdSoil', 'seaDist', 'avgElev', 'avgPrecip',
+                   'avgTemp', 'sdElev', 'waterArea', 'avgSuitable',
+                   'sdSuitable', 'popDens95', 'range', 'area', 'withinCountry', 
+                   'numCountry', 'migrationDist', 'lnLang', 'totalPop95',
+                   'absLat', 'tropics', 'erange_gecon', 'lnArea', 
+                   'lnPopDens95', 'pctIndigenous', 'diffAvgElev',
+                   'diffAvgPrecip', 'diffAvgTemp', 'diffAvgSuit',
+                   'overlap', 'suitableCells', 'numLang')
+
+modelCols = c('lnLang', 'sdElev', 'sdSuitable', 'avgElev', 'avgSuitable',
+              'absLat', 'avgPrecip', 'avgTemp', 'lnArea', 'seaDist', 'waterArea',
+              'withinCountry', 'numCountry', 'migrationDist', 'lnPopDens95')
+```
+
+## Replication
+
+```{r model2.1, echo=F}
+condition = (data2$totalPop95 >= 3000) & (data2$suitableCells >= 10)
+for (col in modelCols) {
+  data2[condition, paste0(col, '1')] = standardize(data2[condition, col])
+}
+model1 = lm(lnLang1 ~ absLat1, data2 %>% filter(condition))
+```
+
+```{r model2.1table, echo=F, results='show'}
+coeftest(model1, vcov = vcovCL, cluster = ~countryCode)
+```
+
+```{r model2.2, echo=F}
+model2 = lm(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat1,
+            data2 %>% filter(condition))
+```
+
+```{r model2.2table, echo=F, results='show'}
+coeftest(model2, vcov = vcovCL, cluster = ~countryCode)
+```
+
+```{r model2.3, echo=F}
+model3 = lm(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat1
+            + avgPrecip1 + avgTemp1 + lnArea1 + seaDist1 + waterArea1
+            + withinCountry1 + numCountry1 + migrationDist1,
+            data2 %>% filter(condition))
+```
+
+```{r model2.3table, echo=F, results='show'}
+coeftest(model3, vcov = vcovCL, cluster = ~countryCode)
+```
+
+```{r model2.4, echo=F}
+model4 = lm(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat1
+            + avgPrecip1 + avgTemp1 + lnArea1 + seaDist1 + waterArea1
+            + withinCountry1 + numCountry1 + migrationDist1 + lnPopDens951,
+            data2 %>% filter(condition))
+```
+
+```{r model2.4table, echo=F, results='show'}
+coeftest(model4, vcov = vcovCL, cluster = ~countryCode)
+```
+
+```{r model2.5, echo=F}
+condition = (data2$totalPop95 >= 3000) & (data2$suitableCells >= 10) & (data2$tropics == 1)
+for (col in modelCols) {
+  data2[condition, paste0(col, '5')] = standardize(data2[condition, col])
+}
+model5 = lm(lnLang5 ~ sdElev5 + sdSuitable5 + avgElev5 + avgSuitable5 + absLat5
+            + avgPrecip5 + avgTemp5 + lnArea5 + seaDist5 + waterArea5
+            + withinCountry5 + numCountry5 + migrationDist5 + lnPopDens955,
+            data2 %>% filter(condition))
+```
+
+```{r model2.5table, echo=F, results='show'}
+coeftest(model5, vcov = vcovCL, cluster = ~countryCode)
+```
+
+```{r model2.6, echo=F}
+condition = (data2$totalPop95 >= 3000) & (data2$suitableCells >= 10) & (data2$tropics == 0)
+for (col in modelCols) {
+  data2[condition, paste0(col, '6')] = standardize(data2[condition, col])
+}
+model6 = lm(lnLang6 ~ sdElev6 + sdSuitable6 + avgElev6 + avgSuitable6 + absLat6
+            + avgPrecip6 + avgTemp6 + lnArea6 + seaDist6 + waterArea6
+            + withinCountry6 + numCountry6 + migrationDist6 + lnPopDens956,
+            data2 %>% filter(condition))
+```
+
+```{r model2.6table, echo=F, results='show'}
+coeftest(model6, vcov = vcovCL, cluster = ~countryCode)
+```
+
+```{r model2.7, echo=F}
+condition = (data2$totalPop95 >= 3000) & (data2$suitableCells >= 10) & (data2$withinCountry == 1)
+for (col in modelCols) {
+  data2[condition, paste0(col, '7')] = standardize(data2[condition, col])
+}
+model7 = lm(lnLang7 ~ sdElev7 + sdSuitable7 + avgElev7 + avgSuitable7 + absLat7
+            + avgPrecip7 + avgTemp7 + lnArea7 + seaDist7 + waterArea7
+            + migrationDist7 + lnPopDens957,
+            data2 %>% filter(condition))
+```
+
+```{r model2.7table, echo=F, results='show'}
+coeftest(model7, vcov = vcovCL, cluster = ~countryCode)
+```
+
+
+## Robustness Check
+
 <!-- # "Re-analysis" -->
 
 \newpage
 # Appendix: code
 <!-- NOTE: add code chunks to be displayed here -->
-```{r codeAppendix, ref.label=c('data_import', 'rename', 'greeceNepal', 'worldMap', 'summary', 'standardize', 'model1.1', 'model1.2', 'model1.3', 'model1.4', 'model1.5', 'model1.1Rob', 'model1.2Rob', 'model1.3Rob', 'model1.4Rob', 'data_import2b', 'model1.2.1', 'model1.2.2', 'model1.2.3', 'model1.2.4', 'model1.2.5', 'model1.2.6', 'model1.2.7'), echo=T, eval=F}
+```{r codeAppendix, ref.label=c('dataImport1', 'rename1', 'greeceNepal', 'worldMap', 'summary', 'standardize1', 'model1.1', 'model1.2', 'model1.3', 'model1.4', 'model1.5', 'model1.1Rob', 'model1.2Rob', 'model1.3Rob', 'model1.4Rob', 'data_import2b', 'model1.2.1', 'model1.2.2', 'model1.2.3', 'model1.2.4', 'model1.2.5', 'model1.2.6', 'model1.2.7', 'dataImport2', 'rename2', 'model2.1', 'model2.1table', 'model2.2', 'model2.2table', 'model2.3', 'model2.3table', 'model2.4', 'model2.4table', 'model2.5', 'model2.5table', 'model2.6', 'model2.6 table', 'model2.7', 'model2.7table'), echo=T, eval=F}
 
 ```
 
