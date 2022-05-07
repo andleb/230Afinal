@@ -129,38 +129,25 @@ colnames(data) = c('countryCode', 'entryYear', 'countryName', 'avgTemp',
 ## Paper summary
 
 The paper by Michalopoulos aims to explain ethnolinguistic diversity within and across countries by assuming that a proxy quantity
-- the number of languages per square kilometer - is determined by a selection of various economic, historical, and 
-geographic variables. It determines that *variation in regional land quality* and *variation in elevation* are 
-the most significant determinants of linguistic diversity. The hypothesis underpinning this examination is that differences
-in local land characteristics induce different levels of human capital across locations, which in turn, gives rise to localized 
-ethnicities that are characterized by separate languages. The results of the empirical study presented are found to 
-be consistent with this hypothesis.
+- the number of languages per square kilometer - is determined by a selection of various economic, historical, and geographic variables. It determines that *variation in regional land quality* and *variation in elevation* are 
+the most significant determinants of linguistic diversity. The hypothesis underpinning this examination is that differences in local land characteristics induce different levels of human capital across locations, which in turn, gives rise to localized ethnicities that are characterized by separate languages. The results of the empirical study presented are found to be consistent with this hypothesis.
 
 The empirical results are obtained separately by three regressions:  
 
-* **Cross-country**: this takes the current political borders as the unit within which covariates such as the number 
-  of languages are counted.
+* **Cross-country**: this takes the current political borders as the unit within which covariates such as the number of languages are counted.
 
-* **Virtual countries**: To account for the arbitrary nature of some political boundaries with respect to ethnolinguistic
-  groupings, the world is split into arbitrary *virtual countries* and the regression is performed again.
+* **Virtual countries**: To account for the arbitrary nature of some political boundaries with respect to ethnolinguistic groupings, the world is split into arbitrary *virtual countries* and the regression is performed again.
   
-* **Adjacent regions**: To account for a potentially high "baseline" effect in some regions, adjacent regions are
-  compared directly, which neutralizes region-specific fixed effects and focuses on the effect of the variables under consideration.
+* **Adjacent regions**: To account for a potentially high "baseline" effect in some regions, adjacent regions are compared directly, which neutralizes region-specific fixed effects and focuses on the effect of the variables under consideration.
   
 <!-- Finally, in regions that have undergone a major demographic shift in the last 500 years, the explanatory power of the model -->
 <!-- is found to be significantly weaker; these regions are controlled for with a dummy variable. -->
 
 ## Data statistics and summary table
 
-The data comes from multiple sources: the standard geographic data was sourced from the *Geographically Based Economic Data database*,
-the data on land quality for agriculture comes from *Ramankutty et al. (2002)*, and the data on the distribution of 
-languages comes from the *World Language Mapping System*. Fortunately, the data provided by the author was already processed
-and cleaned to the extent used in the paper. All we did was rename columns to more descriptive names.
+The data comes from multiple sources: the standard geographic data was sourced from the *Geographically Based Economic Data database*, the data on land quality for agriculture comes from *Ramankutty et al. (2002)*, and the data on the distribution of languages comes from the *World Language Mapping System*. Fortunately, the data provided by the author was already processed and cleaned to the extent used in the paper. All we did was rename columns to more descriptive names.
 
-The paper lacks a true summary table and shows a couple of EDA figures instead. We replicate two of those figures,
-and then display our own summary table of the features used in the paper's first regression - the *cross-country model*.
-Figure \ref{fig:suit} shows the distribution of land suitability for agriculture across the world at a resolution of .5-by.5 decimal degrees. 
-The dependent variable represents the probability that a particular grid cell may be cultivated. 
+The paper lacks a true summary table and shows a couple of EDA figures instead. We replicate two of those figures, and then display our own summary table of the features used in the paper's first regression - the *cross-country model*. Figure \ref{fig:suit} shows the distribution of land suitability for agriculture across the world at a resolution of .5-by.5 decimal degrees. The dependent variable represents the probability that a particular grid cell may be cultivated. 
 
 ```{r fig1, fig.cap="\\label{fig:suit} Land quality for agriculture across countries", echo=F, cache=T, fig.width = 6, fig.height=4}
 fig1 = ggplot(cells) + rasterize(geom_sf(aes(fill = suit_new), colour = NA), dpi=450) +
@@ -202,6 +189,7 @@ legend(
 ```
 
 Below is our summary table of important variables for the first model. The dependent variable is `numLang`, which is the number of languages whose "traditional homeland" intersects with the country's boundary. Other variables, such as `avgSuitable` and `sdSuitable`, were aggregated from the land suitability dataset described above. 
+
 Additional covariates are measures of centrality and variablity, the log of the country's 1995 population, human migration distance from Africa, and distance from a large body of water. While some other variables in the provided dataset have missing values for some countries, note that all variables included in the first regression are known for all countries.
 
 ```{r summary, results='hide', echo=F}
