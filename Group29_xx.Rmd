@@ -21,7 +21,7 @@ output:
     df_print: kable
 papersize: a4
 urlcolor: blue
-# bibliography: [references.bib]
+bibliography: [references.bib]
 editor_options:
   markdown:
     wrap: 120
@@ -128,7 +128,7 @@ colnames(data) = c('countryCode', 'entryYear', 'countryName', 'avgTemp',
 
 ## Paper summary
 
-The paper by Michalopoulos aims to explain ethnolinguistic diversity within and across countries by assuming that a proxy quantity
+The paper by Michalopoulos [@michalopoulos_2012] aims to explain ethnolinguistic diversity within and across countries by assuming that a proxy quantity
 - the number of languages per square kilometer - is determined by a selection of various economic, historical, and 
 geographic variables. It determines that *variation in regional land quality* and *variation in elevation* are 
 the most significant determinants of linguistic diversity. The hypothesis underpinning this examination is that differences
@@ -279,7 +279,6 @@ modelCols = c('entryYear', 'avgTemp', 'avgPrecip', 'seaDist', 'avgElev',
 # for (col in modelCols) {
 #  data[,col] = standardize(data[,col])
 # }
-
 # NOTE: Easier to say what we're not standardizing; also for the robustness checks we need to keep a non-standardized copy
 dataStd = data %>% mutate(across(!countryName & !countryCode , standardize))
 ```
@@ -623,6 +622,9 @@ coeftest(model7, vcov = vcovCL, cluster = ~countryCode)
 
 <!-- # "Re-analysis" -->
 
+
+
+
 \newpage
 # Appendix: code
 <!-- NOTE: add code chunks to be displayed here -->
@@ -630,6 +632,7 @@ coeftest(model7, vcov = vcovCL, cluster = ~countryCode)
 
 ```
 
+# References
 
 
 
