@@ -774,6 +774,25 @@ tbl4format %>% select(10, 2:8) %>%
 ## Robustness Check
 
 
+```{r model2.1Rob, results='hide', echo=F, eval=T}
+condition = (data2$totalPop95 >= 3000) & (data2$suitableCells >= 10)
+# NOTE: see "Table 7A" in the code
+for (col in modelCols) {
+  data2[condition, paste0(col, '1')] = standardize(data2[condition, col])
+}
+
+robust2.1 <-  glm.nb(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat1
+                    + avgPrecip1 + avgTemp1 + lnArea1 + seaDist1 + waterArea1
+                    + withinCountry1 + numCountry1 + migrationDist1 + lnPopDens951,
+                    data2 %>% filter(condition)
+                    , na.action = na.exclude)
+```
+
+```{r model2.1RobTable, results='show', echo=F, eval=T}
+summary(robust1.1)
+```
+
+
 
 
 
