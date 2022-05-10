@@ -1,6 +1,6 @@
 ---
 title: |
-  | STAT 230A Final project
+  | STAT 230A Final Project
   | Replication of Michalopoulos: The Origins of Ethnolinguistic Diversity
 author: 
   - Andrej Leban, andrej_leban@berkeley.edu
@@ -10,7 +10,7 @@ email:
   - "ischmidt20@berkeley.edu"
 # date: "`r format(Sys.time(), '%B %d, %Y')`"
 header-includes:
-  - \usepackage{float, amsthm, amsmath, amssymb, bm, enumitem, latexsym, color, minipage-marginpar, caption, multirow, verbatim, xcolor}
+  - \usepackage{float, amsthm, amsmath, amssymb, bm, enumitem, latexsym, color, minipage-marginpar, caption, multirow, verbatim, xcolor, setspace, fancyhdr}
 geometry: margin=1in
 # linestretch: 1.5
 output:
@@ -105,6 +105,12 @@ my_theme <- theme_minimal()
 \def\argmax{\mathop{\rm argmax}}
 
 \setlength{\parskip}{1.4 \medskipamount}
+
+\onehalfspacing
+
+\pagestyle{fancy}
+\fancypagestyle{plain}{\pagestyle{fancy}}
+\fancyhead[R]{Group 29, Isaac Schmidt}
 
 
 ```{r dataImport1, echo=F}
