@@ -74,6 +74,8 @@ knitr::opts_chunk$set(
   size="small"
 )
 
+options(knitr.kable.NA = '')
+
 # define my_theme - append here
 my_theme <- theme_minimal()
 ```
@@ -261,9 +263,9 @@ $$
 $$
 The first model only includes absolute latitude, the second model adds the mean and standard deviation of both elevation and land quality within each country, and the remaining models add additional covariates $X_i$.
 
-As the code and the data files were provided completely by the author, we were able to replicate the results perfectly. Note that all variables, including indicators, were standardized by Michalopolous, so we did so here as well. Unsurprisingly, given the increasing number of features, the observed $R^2$ also increases with each model. In all four models, variation in elevation, and variation in land quality were useful predictors of the log number of languages, as originally hypothesized by the author. Mean precipitation, log of area, and migratory distance from Ethiopia were also significant predictors whenever they were included.
-
 ## Replication
+
+As the code and the data files were provided completely by the author, we were able to replicate the results perfectly. Note that all variables, including indicators, were standardized by Michalopolous, so we did so here as well. Unsurprisingly, given the increasing number of features, the observed $R^2$ also increases with each model. In all four models, variation in elevation, and variation in land quality were useful predictors of the log number of languages, as originally hypothesized by the author. Mean precipitation, log of area, and migratory distance from Ethiopia were also significant predictors whenever they were included.
 
 ```{r standardize1, echo=F}
 standardize = function(vec) {return ((vec - mean(vec, na.rm = TRUE)) / sd(vec, na.rm = TRUE))}
@@ -285,16 +287,8 @@ dataStd = data %>% mutate(across(!countryName & !countryCode , standardize))
 model1.1 = lm(lnLang ~ absLat, dataStd)
 ```
 
-```{r model1.1table, echo=F, results='show'}
-summary(model1.1)
-```
-
 ```{r model1.2, echo=F}
 model1.2 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat, dataStd)
-```
-
-```{r model1.2table, echo=F, results='show'}
-summary(model1.2)
 ```
 
 ```{r model1.3, echo=F}
@@ -302,18 +296,10 @@ model1.3 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
             + avgPrecip + avgTemp + lnArea + seaDist + migrationDist, dataStd)
 ```
 
-```{r model1.3table, echo=F, results='show'}
-summary(model1.3)
-```
-
 ```{r model1.4, echo=F}
 model1.4 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
             + avgPrecip + avgTemp + lnArea + seaDist + migrationDist + lnPop95
             + africa + europe + americas + asiaPac, dataStd)
-```
-
-```{r model1.4table, echo=F, results='show'}
-summary(model1.4)
 ```
 
 ```{r model1.5, echo=F}
@@ -328,9 +314,70 @@ model1.5 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
             + africa + europe + americas + asiaPac, dataStd, na.action = na.exclude)
 ```
 
-```{r model1.5table, echo=F, results='show'}
-summary(model1.5)
+```{r tbl1, results='hide', echo=F}
+models = paste0("model1.", 1:5)
+coefs = sapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 1]}) %>% unlist() %>% data.frame()
+coefs$model = substr(row.names(coefs), 1, 8)
+coefs$column = substr(row.names(coefs), 10, nchar(row.names(coefs)))
+
+ses = sapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 2]}) %>% unlist() %>% data.frame()
+ses$model = substr(row.names(ses), 1, 8)
+ses$column = substr(row.names(ses), 10, nchar(row.names(ses)))
+
+ts = sapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 4]}) %>% unlist() %>% data.frame()
+ts$model = substr(row.names(ts), 1, 8)
+ts$column = substr(row.names(ts), 10, nchar(row.names(ts)))
+
+order = c('sdElev', 'sdSuitable', 'avgElev', 'avgSuitable', 'absLat', 
+          'avgPrecip', 'avgTemp', 'lnArea', 'seaDist', 'migrationDist',
+          'lnPop95', 'lnPopDens1500', 'entryYear', 'agriTran')
+tbl1 = coefs %>% pivot_wider(names_from = "model", values_from = '.') %>% 
+  merge(ses %>% pivot_wider(names_from = "model", values_from = '.'),
+        by = 'column',
+        suffixes = c('Estimate', 'SE')
+  ) %>% 
+  merge(ts %>% pivot_wider(names_from = "model", values_from = '.'),
+        by = 'column') %>%
+  slice(match(order, column)) %>% 
+  column_to_rownames(var = "column") 
 ```
+
+```{r tbl1Print, results='show', echo=F}
+tbl1format = data.frame(tbl1)
+for (model in models) {
+  estimCol = paste0(model, 'Estimate')
+  seCol = paste0(model, 'SE')
+  notNA = !is.na(tbl1[, estimCol])
+  
+  tbl1format[notNA, estimCol] = as.character(formatC(tbl1format[notNA, estimCol], digits = 3, format = 'f'))
+  tbl1format[notNA, seCol] = as.character(formatC(tbl1format[notNA, seCol], digits = 3, format = 'f'))
+  significant = tbl1[notNA, model] <= .01
+  
+  tbl1format[notNA, estimCol] = cell_spec(tbl1format[notNA, estimCol], italic = significant)
+  tbl1format[notNA, seCol] = cell_spec(tbl1format[notNA, seCol], italic = significant)
+}
+
+order = c(1, 6, 2, 7, 3, 8, 4, 9, 5, 10)
+col.names = c(paste0("(", 1:5, ") Coef."), paste0("(", 1:5, ") S.E."))[order]
+
+tbl1format %>% select(order) %>%
+  knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, linesep = c(""), 
+             col.names = col.names, align = "r", 
+             caption = 'Main specification for the cross-country analysis. Italics indicate significance at the 99\\% level.', escape = F) %>% row_spec(0, angle = 90) 
+```
+
+```{r tbl1info, results='show', echo=F}
+tbl1info = data.frame(
+  Model = 1:5,
+  Continent = c(F, F, F, F, T),
+  Observations = sapply(models, function(model) { nobs(get(model))}),
+  RSq = sapply(models, function(model) {
+    formatC(summary(get(model))$r.squared, digits = 2, format = 'f')
+    }), row.names = NULL
+  )
+tbl1info %>% knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, caption = "Information for each model in cross-country analysis.")
+```
+
 
 ### Critique of Assumptions
 
