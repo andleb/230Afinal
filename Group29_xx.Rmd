@@ -360,13 +360,21 @@ for (model in models) {
   tbl1format[notNA, seCol] = cell_spec(tbl1format[notNA, seCol], italic = significant)
 }
 
+rownames(tbl1format) = c('Variation in elevation', 'Variation in land quality',
+                           'Mean elevation', 'Mean land quality',
+                           'Absolute latitude', 'Mean precipitation',
+                           'Mean temperature', 'Ln(Area)',
+                           'Distance from the sea', 'Migratory dist. from Ethiopia',
+                           'Ln(Population density in 1995)', 'Ln(Population density in 1500)',
+                           'Year of independence', 'Time of agricultural transition')
+
 order = c(1, 6, 2, 7, 3, 8, 4, 9, 5, 10)
 col.names = c(paste0("(", 1:5, ") Coef."), paste0("(", 1:5, ") S.E."))[order]
 
 tbl1format %>% select(order) %>%
-  knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, linesep = c(""), 
-             col.names = col.names, align = "r", 
-             caption = 'Main specification for the cross-country analysis. Italics indicate significance at the 99\\% level.', escape = F) %>% row_spec(0, angle = 90) 
+  knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, linesep = c(""),
+             col.names = col.names, align = "r", row.names = T, 
+             caption = 'Main specification for the cross-country analysis. Italics indicate significance at the 99\\% level.', escape = F) %>% row_spec(0, angle = 90) %>% kable_styling(font_size = 8)
 ```
 
 ```{r tbl1Info, results='show', echo=F}
