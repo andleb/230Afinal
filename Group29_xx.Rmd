@@ -115,6 +115,7 @@ my_theme <- theme_minimal()
 \fancyhead[R]{Group 29, Isaac Schmidt}
 
 
+
 ```{r dataImport1, echo=F}
 cells = read_sf(dsn = 'data_raw/Virtual_country', layer = 'virtual_cntrygrid')
 countries = read_sf(dsn = 'countries', layer = 'countries')
@@ -626,6 +627,9 @@ for (col in modelCols) {
   data2[condition, paste0(col, '1')] = standardize(data2[condition, col])
 }
 model2.1 = lm(lnLang1 ~ absLat1, data2 %>% filter(condition))
+coefs = coeftest(model2.1, vcov = vcovCL, cluster = ~countryCode)[, 1]
+ses = coeftest(model2.1, vcov = vcovCL, cluster = ~countryCode)[, 2]
+pvals = coeftest(model2.1, vcov = vcovCL, cluster = ~countryCode)[, 4]
 ```
 
 ```{r model2.1table, echo=F, results='show'}
@@ -635,6 +639,9 @@ coeftest(model2.1, vcov = vcovCL, cluster = ~countryCode)
 ```{r model2.2, echo=F}
 model2.2 = lm(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat1,
             data2 %>% filter(condition))
+coefs = c(coefs, coeftest(model2.2, vcov = vcovCL, cluster = ~countryCode)[, 1])
+ses = c(ses, coeftest(model2.2, vcov = vcovCL, cluster = ~countryCode)[, 2])
+pvals = c(pvals, coeftest(model2.2, vcov = vcovCL, cluster = ~countryCode)[, 4])
 ```
 
 ```{r model2.2table, echo=F, results='show'}
@@ -646,6 +653,9 @@ model2.3 = lm(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat
             + avgPrecip1 + avgTemp1 + lnArea1 + seaDist1 + waterArea1
             + withinCountry1 + numCountry1 + migrationDist1,
             data2 %>% filter(condition))
+coefs = c(coefs, coeftest(model2.3, vcov = vcovCL, cluster = ~countryCode)[, 1])
+ses = c(ses, coeftest(model2.3, vcov = vcovCL, cluster = ~countryCode)[, 2])
+pvals = c(pvals, coeftest(model2.3, vcov = vcovCL, cluster = ~countryCode)[, 4])
 ```
 
 ```{r model2.3table, echo=F, results='show'}
@@ -657,6 +667,9 @@ model2.4 = lm(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat
             + avgPrecip1 + avgTemp1 + lnArea1 + seaDist1 + waterArea1
             + withinCountry1 + numCountry1 + migrationDist1 + lnPopDens951,
             data2 %>% filter(condition))
+coefs = c(coefs, coeftest(model2.4, vcov = vcovCL, cluster = ~countryCode)[, 1])
+ses = c(ses, coeftest(model2.4, vcov = vcovCL, cluster = ~countryCode)[, 2])
+pvals = c(pvals, coeftest(model2.4, vcov = vcovCL, cluster = ~countryCode)[, 4])
 ```
 
 ```{r model2.4table, echo=F, results='show'}
@@ -672,6 +685,9 @@ model2.5 = lm(lnLang5 ~ sdElev5 + sdSuitable5 + avgElev5 + avgSuitable5 + absLat
             + avgPrecip5 + avgTemp5 + lnArea5 + seaDist5 + waterArea5
             + withinCountry5 + numCountry5 + migrationDist5 + lnPopDens955,
             data2 %>% filter(condition))
+coefs = c(coefs, coeftest(model2.5, vcov = vcovCL, cluster = ~countryCode)[, 1])
+ses = c(ses, coeftest(model2.5, vcov = vcovCL, cluster = ~countryCode)[, 2])
+pvals = c(pvals, coeftest(model2.5, vcov = vcovCL, cluster = ~countryCode)[, 4])
 ```
 
 ```{r model2.5table, echo=F, results='show'}
@@ -687,6 +703,9 @@ model2.6 = lm(lnLang6 ~ sdElev6 + sdSuitable6 + avgElev6 + avgSuitable6 + absLat
             + avgPrecip6 + avgTemp6 + lnArea6 + seaDist6 + waterArea6
             + withinCountry6 + numCountry6 + migrationDist6 + lnPopDens956,
             data2 %>% filter(condition))
+coefs = c(coefs, coeftest(model2.6, vcov = vcovCL, cluster = ~countryCode)[, 1])
+ses = c(ses, coeftest(model2.6, vcov = vcovCL, cluster = ~countryCode)[, 2])
+pvals = c(pvals, coeftest(model2.6, vcov = vcovCL, cluster = ~countryCode)[, 4])
 ```
 
 ```{r model2.6table, echo=F, results='show'}
@@ -702,10 +721,82 @@ model2.7 = lm(lnLang7 ~ sdElev7 + sdSuitable7 + avgElev7 + avgSuitable7 + absLat
             + avgPrecip7 + avgTemp7 + lnArea7 + seaDist7 + waterArea7
             + migrationDist7 + lnPopDens957,
             data2 %>% filter(condition))
+coefs = c(coefs, coeftest(model2.7, vcov = vcovCL, cluster = ~countryCode)[, 1])
+ses = c(ses, coeftest(model2.7, vcov = vcovCL, cluster = ~countryCode)[, 2])
+pvals = c(pvals, coeftest(model2.7, vcov = vcovCL, cluster = ~countryCode)[, 4])
 ```
 
 ```{r model2.7table, echo=F, results='show'}
 coeftest(model2.7, vcov = vcovCL, cluster = ~countryCode)
+```
+
+```{r tbl4, results='hide', echo=F}
+models = paste0("model2.", 1:7)
+coefs = data.frame(coefs, row.names = paste0("model2.", cumsum(names(coefs) == "(Intercept)"), ".", names(coefs)))
+coefs$model = substr(row.names(coefs), 1, 8)
+coefs$column = substr(row.names(coefs), 10, nchar(row.names(coefs)) - 1)
+
+ses = data.frame(ses, row.names = paste0("model2.", cumsum(names(ses) == "(Intercept)"), ".", names(ses)))
+ses$model = substr(row.names(ses), 1, 8)
+ses$column = substr(row.names(ses), 10, nchar(row.names(ses)) - 1)
+
+pvals = data.frame(pvals, row.names = paste0("model2.", cumsum(names(pvals) == "(Intercept)"), ".", names(pvals)))
+pvals$model = substr(row.names(pvals), 1, 8)
+pvals$column = substr(row.names(pvals), 10, nchar(row.names(pvals)) - 1)
+
+order = c('sdElev', 'sdSuitable', 'avgElev', 'avgSuitable', 'absLat',
+          'avgPrecip', 'avgTemp', 'lnArea', 'seaDist', 'waterArea',
+          'withinCountry', 'numCountry', 'migrationDist', 'lnPopDens95')
+
+pvalsPivoted = pvals %>% pivot_wider(names_from = "model", values_from = 'pvals') %>% slice(match(order, column))
+# tbl4 = coefs %>% pivot_wider(names_from = "model", values_from = 'coefs') %>%
+#   merge(ses %>% pivot_wider(names_from = "model", values_from = 'ses'),
+#         by = 'column',
+#         suffixes = c('Estimate', 'SE')
+#   ) %>%
+#   merge(pvals %>% pivot_wider(names_from = "model", values_from = 'pvals'),
+#         by = 'column') %>%
+#   slice(match(order, column)) %>%
+#   column_to_rownames(var = "column")
+# tbl4
+
+tbl4 = rbind(coefs %>% pivot_wider(names_from = "model", values_from = 'coefs'), ses %>% pivot_wider(names_from = "model", values_from = 'ses'))
+tbl4$stat = c(rep('Estimate', 15), rep('SE', 15))
+indices = c(rbind(match(order, tbl4$column), match(order, tbl4$column) + 15))
+tbl4 = tbl4 %>% slice(indices)
+
+```
+
+```{r tbl4Print, results='show', echo=F}
+tbl4format = data.frame(tbl4)
+for (model in models) {
+  estimRows = !is.na(tbl4[, model]) & (tbl4$stat == 'Estimate')
+  seRows = !is.na(tbl4[, model]) & (tbl4$stat == 'SE')
+
+  tbl4format[estimRows, model] = sprintf(fmt = "%.3f", tbl4[estimRows, model] %>% unlist() %>% as.numeric())
+  tbl4format[seRows, model] = paste0("(", sprintf(fmt = "%.3f", tbl4[seRows, model] %>% unlist() %>% as.numeric()), ")")
+  
+  significant = rep(pvalsPivoted[, model] < .01, each = 2)
+  significant[is.na(significant)] = FALSE
+  tbl4format[estimRows, model] = cell_spec(tbl4format[estimRows, model], italic = significant[estimRows])
+  tbl4format[seRows, model] = cell_spec(tbl4format[seRows, model], italic = significant[seRows])
+}
+
+tbl4format$name = c('Variation in elevation', NA, 'Variation in land quality', NA,
+                           'Mean elevation', NA, 'Mean land quality', NA,
+                           'Absolute latitude', NA, 'Mean precipitation', NA,
+                           'Mean temperature', NA, 'Ln(Area)', NA,
+                           'Distance from the sea', NA, 'Water area', NA,
+                         'Within-country indicator', NA, 'Number of countries', NA,
+                         'Migratory dist. from Ethiopia', NA, 'Ln(Population density in 1995)', NA)
+
+col.names = c("Variable", paste0("(", 1:7, ")"))
+
+tbl4format %>% select(10, 2:8) %>%
+  knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, linesep = c("", "\\addlinespace"),
+             col.names = col.names, align = "r", row.names = F,
+             caption = 'Main specification for the virtual analysis. Italics indicate significance at the 99\\% level.', escape = F)# %>% row_spec(0, angle = 90) %>% kable_styling(font_size = 8)
+
 ```
 
 
@@ -722,7 +813,7 @@ coeftest(model2.7, vcov = vcovCL, cluster = ~countryCode)
 \newpage
 # Appendix: code
 <!-- NOTE: add code chunks to be displayed here -->
-```{r codeAppendix, ref.label=c('dataImport1', 'rename1', 'greeceNepal', 'worldMap', 'summary', 'standardize1', 'model1.1', 'model1.2', 'model1.3', 'model1.4', 'model1.5', 'tbl1', 'tbl1Print', 'tbl1Info', 'model1.1Rob', 'model1.2Rob', 'model1.3Rob', 'model1.4Rob', 'data_import2b', 'model1.2.1', 'model1.2.2', 'model1.2.3', 'model1.2.4', 'model1.2.5', 'model1.2.6', 'model1.2.7', 'dataImport2', 'rename2', 'model2.1', 'model2.1table', 'model2.2', 'model2.2table', 'model2.3', 'model2.3table', 'model2.4', 'model2.4table', 'model2.5', 'model2.5table', 'model2.6', 'model2.6 table', 'model2.7', 'model2.7table'), echo=T, eval=F}
+```{r codeAppendix, ref.label=c('dataImport1', 'rename1', 'greeceNepal', 'worldMap', 'summary', 'standardize1', 'model1.1', 'model1.2', 'model1.3', 'model1.4', 'model1.5', 'tbl1', 'tbl1Print', 'tbl1Info', 'model1.1Rob', 'model1.2Rob', 'model1.3Rob', 'model1.4Rob', 'data_import2b', 'model1.2.1', 'model1.2.2', 'model1.2.3', 'model1.2.4', 'model1.2.5', 'model1.2.6', 'model1.2.7', 'dataImport2', 'rename2', 'model2.1', 'model2.1table', 'model2.2', 'model2.2table', 'model2.3', 'model2.3table', 'model2.4', 'model2.4table', 'model2.5', 'model2.5table', 'model2.6', 'model2.6 table', 'model2.7', 'model2.7table', 'tbl4', 'tbl4Print', 'tbl4Info'), echo=T, eval=F}
 
 ```
 
