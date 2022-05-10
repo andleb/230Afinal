@@ -128,13 +128,7 @@ colnames(data) = c('countryCode', 'entryYear', 'countryName', 'avgTemp',
 
 ## Paper summary
 
-The paper by Michalopoulos [@michalopoulos_2012] aims to explain ethnolinguistic diversity within and across countries by assuming that a proxy quantity
-- the number of languages per square kilometer - is determined by a selection of various economic, historical, and 
-geographic variables. It determines that *variation in regional land quality* and *variation in elevation* are 
-the most significant determinants of linguistic diversity. The hypothesis underpinning this examination is that differences
-in local land characteristics induce different levels of human capital across locations, which in turn, gives rise to localized 
-ethnicities that are characterized by separate languages. The results of the empirical study presented are found to 
-be consistent with this hypothesis.
+The paper by Michalopoulos [@michalopoulos_origins_2012] aims to explain ethnolinguistic diversity within and across countries by assuming that a proxy quantity—the number of languages per square kilometer—is determined by a selection of various economic, historical, andgeographic variables. It determines that *variation in regional land quality* and *variation in elevation* are the most significant determinants of linguistic diversity. The hypothesis underpinning this examination is that differences in local land characteristics induce different levels of human capital across locations, which in turn, gives rise to localized ethnicities that are characterized by separate languages. The results of the empirical study presented are found to be consistent with this hypothesis.
 
 The empirical results are obtained separately by three regressions:  
 
@@ -505,7 +499,7 @@ As with the previous analysis, the geographic features are derived from a datase
 
 To obtain the number of languages in each virtual country, Michalopolous simply intersected the shapefile provided in the World Language Mapping System with the grid of countries. However, probably due to the proprietary nature of the WLMS, the "number of languages" variable was withheld from the public data download, meaning we could not exactly replicate the analysis.
 
-Fortunately, we stumbled across the *Geo-referencing of Ethnic Groups* (GREG) dataset, which contains a shapefile of the locations of ethnic groups across the world. As Michalopolous was only using linguistic diversity as a proxy for ethnic diversity, we decided it would be smart to model ethnic diversity directly, with the GREG dataset.
+Fortunately, we stumbled across the *Geo-referencing of Ethnic Groups* (GREG) [@weidmann_representing_2010]  dataset, which contains a shapefile of the locations of ethnic groups across the world. As Michalopolous was only using linguistic diversity as a proxy for ethnic diversity, we decided it would be smart to model ethnic diversity directly, with the GREG dataset.
 
 The original GREG dataset required some manipulation to get it in a format suitable to swap in for the WLMS. For details, see the appendix, which shows the geoprocessing steps performed with the `geopandas` module in Python.
 
@@ -642,6 +636,9 @@ coeftest(model7, vcov = vcovCL, cluster = ~countryCode)
 <!-- # "Re-analysis" -->
 
 
+# References
+
+<div id="refs"></div>
 
 
 \newpage
@@ -651,7 +648,6 @@ coeftest(model7, vcov = vcovCL, cluster = ~countryCode)
 
 ```
 
-# References
 
 
 
