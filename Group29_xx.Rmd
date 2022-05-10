@@ -149,9 +149,9 @@ The empirical results are obtained separately by three regressions:
 
 ## Exploratory Data Analysis and Summary Table
 
-The data comes from multiple sources: the standard geographic data was sourced from the *Geographically Based Economic Data database*, the data on land quality for agriculture comes from *Ramankutty et al. (2002)*, and the data on the distribution of languages comes from the *World Language Mapping System*. Fortunately, the data provided by the author was already processed and cleaned to the extent used in the paper. All we did was rename columns to more descriptive names.
+The data comes from multiple sources: the standard geographic data was sourced from the *Geographically Based Economic Data database*, the data on land quality for agriculture comes from *Ramankutty et al. (2002)*, and the data on the distribution of languages comes from the *World Language Mapping System*. Fortunately, the data provided by the author was already processed and cleaned to the extent used in the paper, so all we did was rename columns to more descriptive names.
 
-The paper lacks a true summary table and shows a couple of EDA figures instead. We replicate two of those figures, and then display our own summary table of the features used in the paper's first regression - the *cross-country model*. Figure \ref{fig:suit} shows the distribution of land suitability for agriculture across the world at a resolution of .5-by.5 decimal degrees. The dependent variable represents the probability that a particular grid cell may be cultivated. 
+The paper lacks a true summary table and shows a couple of EDA figures instead. We replicate two of those figures, and then display our own summary table of the features used in the paper's first regression—the *cross-country model*. Figure \ref{fig:suit} shows the distribution of land suitability for agriculture across the world at a resolution of .5-by.5 decimal degrees. The dependent variable represents the probability that a particular grid cell may be cultivated. 
 
 ```{r fig1, fig.cap="\\label{fig:suit} Land quality for agriculture across countries", echo=F, cache=T, fig.width = 6, fig.height=4}
 fig1 = ggplot(cells) + rasterize(geom_sf(aes(fill = suit_new), colour = NA), dpi=450) +
@@ -166,7 +166,7 @@ nepalCells = countries %>% filter(COUNTRY == 'Nepal') %>%
   st_intersection(y = cells)
 ```
 
-Figure \ref{fig:kde1} shows the distribution of land quality within two countries selected in the paper—Greece and Nepal, obtained with a KDE using the Epanechnikov kernel.
+Figure \ref{fig:kde1} shows the distribution of land quality within two countries selected in the paper—Greece and Nepal, obtained with a kernel density estimate using the Epanechnikov kernel.
 
 ```{r worldMap, fig.cap="\\label{fig:kde1} Kernel density of land quality in Greece and Nepal", echo=F, fig.width = 5, fig.height=3}
 plot(
@@ -248,8 +248,7 @@ sumTable <- data %>% select(
 ```
 
 ```{r summaryPrint, results='show', echo=F}
-knitr::kable(sumTable, toprule = '', bottomrule = '', booktabs = TRUE, linesep = c(""), caption = 'Summary statistics for covariates in Analysis 1') %>% row_spec(0, angle = 90)
-
+knitr::kable(sumTable, toprule = '', bottomrule = '', booktabs = TRUE, linesep = c(""), caption = 'Summary statistics for covariates in cross-country analysis') %>% row_spec(0, angle = 90)
 ```
 
 
@@ -283,38 +282,38 @@ dataStd = data %>% mutate(across(!countryName & !countryCode , standardize))
 ```
 
 ```{r model1.1, echo=F}
-model1 = lm(lnLang ~ absLat, dataStd)
+model1.1 = lm(lnLang ~ absLat, dataStd)
 ```
 
 ```{r model1.1table, echo=F, results='show'}
-summary(model1)
+summary(model1.1)
 ```
 
 ```{r model1.2, echo=F}
-model2 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat, dataStd)
+model1.2 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat, dataStd)
 ```
 
 ```{r model1.2table, echo=F, results='show'}
-summary(model2)
+summary(model1.2)
 ```
 
 ```{r model1.3, echo=F}
-model3 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
+model1.3 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
             + avgPrecip + avgTemp + lnArea + seaDist + migrationDist, dataStd)
 ```
 
 ```{r model1.3table, echo=F, results='show'}
-summary(model3)
+summary(model1.3)
 ```
 
 ```{r model1.4, echo=F}
-model4 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
+model1.4 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
             + avgPrecip + avgTemp + lnArea + seaDist + migrationDist + lnPop95
             + africa + europe + americas + asiaPac, dataStd)
 ```
 
 ```{r model1.4table, echo=F, results='show'}
-summary(model4)
+summary(model1.4)
 ```
 
 ```{r model1.5, echo=F}
@@ -323,14 +322,14 @@ for (col in modelCols) {
   dataStd[!missingData, col] = standardize(dataStd[!missingData,col])
 }
 
-model5 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
+model1.5 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
             + avgPrecip + avgTemp + lnArea + seaDist + migrationDist + lnPop95
             + lnPopDens1500 + entryYear + agriTran
             + africa + europe + americas + asiaPac, dataStd, na.action = na.exclude)
 ```
 
 ```{r model1.5table, echo=F, results='show'}
-summary(model5)
+summary(model1.5)
 ```
 
 ### Critique of Assumptions
@@ -345,6 +344,7 @@ robust1.1 <- glm.nb(numLang ~ absLat + sdSuitable + sdElev + avgElev + avgSuitab
                       africa + europe + americas + asiaPac
                     , data, na.action = na.exclude)
 ```
+
 ```{r model1.1RobTable, results='show', echo=F, eval=T}
 summary(robust1.1)
 ```
@@ -358,6 +358,7 @@ robust1.2 <- lm(lnLang ~ absLat + dispElev + dispSuitable + avgElev + avgSuitabl
                 data, na.action = na.exclude)
                     
 ```
+
 ```{r model1.2RobTable, results='show', echo=F, eval=T}
 summary(robust1.2)
 ```
@@ -370,6 +371,7 @@ robust1.3 <- lm(lnLang ~ absLat + sdElev + sdClimate + avgElev + climate + avgPr
                 data, na.action = na.exclude)
                     
 ```
+
 ```{r model1.3RobTable, results='show', echo=F, eval=T}
 summary(robust1.3)
 ```
@@ -387,6 +389,7 @@ robust1.4 <- lm(lnLang ~ absLat + sdElev + sdSoil + avgElev + soil + avgPrecip +
                 data1.4, na.action = na.exclude)
                     
 ```
+
 ```{r model1.4RobTable, results='show', echo=F, eval=T}
 summary(robust1.4)
 ```
@@ -415,6 +418,7 @@ data2bStd <- data2b %>% mutate(across(! all_of(notStdized) , standardize))
 robust1.2.1 <- lm(elf ~ abs_lat, data2bStd, na.action = na.exclude)
 
 ```
+
 ```{r model1.2.1Table, results='show', echo=F, eval=T}
 summary(robust1.2.1)
 ```
@@ -426,6 +430,7 @@ robust1.2.2 <- lm(elf ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit
                   data2bStd, na.action = na.exclude)
 
 ```
+
 ```{r model1.2.2Table, results='show', echo=F, eval=T}
 summary(robust1.2.2)
 ```
@@ -439,6 +444,7 @@ robust1.2.3 <- lm(elf ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit
                   , data2bStd, na.action = na.exclude)
 
 ```
+
 ```{r model1.2.3Table, results='show', echo=F, eval=T}
 summary(robust1.2.3)
 ```
@@ -451,6 +457,7 @@ robust1.2.4 <- lm(elf3 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsui
                   , data2bStd, na.action = na.exclude)
 
 ```
+
 ```{r model1.2.4Table, results='show', echo=F, eval=T}
 summary(robust1.2.4)
 ```
@@ -464,6 +471,7 @@ robust1.2.5 <- lm(elf5 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsui
                   , data2bStd, na.action = na.exclude)
 
 ```
+
 ```{r model1.2.5Table, results='show', echo=F, eval=T}
 summary(robust1.2.5)
 ```
@@ -478,6 +486,7 @@ robust1.2.6 <- lm(elf7 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsui
                   , data2bStd, na.action = na.exclude)
 
 ```
+
 ```{r model1.2.6Table, results='show', echo=F, eval=T}
 summary(robust1.2.6)
 ```
@@ -492,6 +501,7 @@ robust1.2.7 <- lm(elf9 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsui
                   , data2bStd, na.action = na.exclude)
 
 ```
+
 ```{r model1.2.Table, results='show', echo=F, eval=T}
 summary(robust1.2.7)
 ```
@@ -554,42 +564,42 @@ condition = (data2$totalPop95 >= 3000) & (data2$suitableCells >= 10)
 for (col in modelCols) {
   data2[condition, paste0(col, '1')] = standardize(data2[condition, col])
 }
-model1 = lm(lnLang1 ~ absLat1, data2 %>% filter(condition))
+model2.1 = lm(lnLang1 ~ absLat1, data2 %>% filter(condition))
 ```
 
 ```{r model2.1table, echo=F, results='show'}
-coeftest(model1, vcov = vcovCL, cluster = ~countryCode)
+coeftest(model2.1, vcov = vcovCL, cluster = ~countryCode)
 ```
 
 ```{r model2.2, echo=F}
-model2 = lm(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat1,
+model2.2 = lm(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat1,
             data2 %>% filter(condition))
 ```
 
 ```{r model2.2table, echo=F, results='show'}
-coeftest(model2, vcov = vcovCL, cluster = ~countryCode)
+coeftest(model2.2, vcov = vcovCL, cluster = ~countryCode)
 ```
 
 ```{r model2.3, echo=F}
-model3 = lm(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat1
+model2.3 = lm(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat1
             + avgPrecip1 + avgTemp1 + lnArea1 + seaDist1 + waterArea1
             + withinCountry1 + numCountry1 + migrationDist1,
             data2 %>% filter(condition))
 ```
 
 ```{r model2.3table, echo=F, results='show'}
-coeftest(model3, vcov = vcovCL, cluster = ~countryCode)
+coeftest(model2.3, vcov = vcovCL, cluster = ~countryCode)
 ```
 
 ```{r model2.4, echo=F}
-model4 = lm(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat1
+model2.4 = lm(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat1
             + avgPrecip1 + avgTemp1 + lnArea1 + seaDist1 + waterArea1
             + withinCountry1 + numCountry1 + migrationDist1 + lnPopDens951,
             data2 %>% filter(condition))
 ```
 
 ```{r model2.4table, echo=F, results='show'}
-coeftest(model4, vcov = vcovCL, cluster = ~countryCode)
+coeftest(model2.4, vcov = vcovCL, cluster = ~countryCode)
 ```
 
 ```{r model2.5, echo=F}
@@ -597,14 +607,14 @@ condition = (data2$totalPop95 >= 3000) & (data2$suitableCells >= 10) & (data2$tr
 for (col in modelCols) {
   data2[condition, paste0(col, '5')] = standardize(data2[condition, col])
 }
-model5 = lm(lnLang5 ~ sdElev5 + sdSuitable5 + avgElev5 + avgSuitable5 + absLat5
+model2.5 = lm(lnLang5 ~ sdElev5 + sdSuitable5 + avgElev5 + avgSuitable5 + absLat5
             + avgPrecip5 + avgTemp5 + lnArea5 + seaDist5 + waterArea5
             + withinCountry5 + numCountry5 + migrationDist5 + lnPopDens955,
             data2 %>% filter(condition))
 ```
 
 ```{r model2.5table, echo=F, results='show'}
-coeftest(model5, vcov = vcovCL, cluster = ~countryCode)
+coeftest(model2.5, vcov = vcovCL, cluster = ~countryCode)
 ```
 
 ```{r model2.6, echo=F}
@@ -612,14 +622,14 @@ condition = (data2$totalPop95 >= 3000) & (data2$suitableCells >= 10) & (data2$tr
 for (col in modelCols) {
   data2[condition, paste0(col, '6')] = standardize(data2[condition, col])
 }
-model6 = lm(lnLang6 ~ sdElev6 + sdSuitable6 + avgElev6 + avgSuitable6 + absLat6
+model2.6 = lm(lnLang6 ~ sdElev6 + sdSuitable6 + avgElev6 + avgSuitable6 + absLat6
             + avgPrecip6 + avgTemp6 + lnArea6 + seaDist6 + waterArea6
             + withinCountry6 + numCountry6 + migrationDist6 + lnPopDens956,
             data2 %>% filter(condition))
 ```
 
 ```{r model2.6table, echo=F, results='show'}
-coeftest(model6, vcov = vcovCL, cluster = ~countryCode)
+coeftest(model2.6, vcov = vcovCL, cluster = ~countryCode)
 ```
 
 ```{r model2.7, echo=F}
@@ -627,14 +637,14 @@ condition = (data2$totalPop95 >= 3000) & (data2$suitableCells >= 10) & (data2$wi
 for (col in modelCols) {
   data2[condition, paste0(col, '7')] = standardize(data2[condition, col])
 }
-model7 = lm(lnLang7 ~ sdElev7 + sdSuitable7 + avgElev7 + avgSuitable7 + absLat7
+model2.7 = lm(lnLang7 ~ sdElev7 + sdSuitable7 + avgElev7 + avgSuitable7 + absLat7
             + avgPrecip7 + avgTemp7 + lnArea7 + seaDist7 + waterArea7
             + migrationDist7 + lnPopDens957,
             data2 %>% filter(condition))
 ```
 
 ```{r model2.7table, echo=F, results='show'}
-coeftest(model7, vcov = vcovCL, cluster = ~countryCode)
+coeftest(model2.7, vcov = vcovCL, cluster = ~countryCode)
 ```
 
 
