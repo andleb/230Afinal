@@ -130,9 +130,9 @@ colnames(data) = c('countryCode', 'entryYear', 'countryName', 'avgTemp',
                    'agriTran', 'asiaPac')
 ```
 
-# Paper summary & summary statistics table
+# Paper Summary & Summary Statistics Table
 
-## Paper summary
+## Paper Summary
 
 The paper by Michalopoulos [@michalopoulos_origins_2012] aims to explain ethnolinguistic diversity within and across countries by assuming that a proxy quantity—the number of languages per square kilometer—is determined by a selection of various economic, historical, andgeographic variables. It determines that *variation in regional land quality* and *variation in elevation* are the most significant determinants of linguistic diversity. The hypothesis underpinning this examination is that differences in local land characteristics induce different levels of human capital across locations, which in turn, gives rise to localized ethnicities that are characterized by separate languages. The results of the empirical study presented are found to be consistent with this hypothesis.
 
@@ -147,7 +147,7 @@ The empirical results are obtained separately by three regressions:
 <!-- Finally, in regions that have undergone a major demographic shift in the last 500 years, the explanatory power of the model -->
 <!-- is found to be significantly weaker; these regions are controlled for with a dummy variable. -->
 
-## Data statistics and summary table
+## Exploratory Data Analysis and Summary Table
 
 The data comes from multiple sources: the standard geographic data was sourced from the *Geographically Based Economic Data database*, the data on land quality for agriculture comes from *Ramankutty et al. (2002)*, and the data on the distribution of languages comes from the *World Language Mapping System*. Fortunately, the data provided by the author was already processed and cleaned to the extent used in the paper. All we did was rename columns to more descriptive names.
 
@@ -168,7 +168,7 @@ nepalCells = countries %>% filter(COUNTRY == 'Nepal') %>%
 
 Figure \ref{fig:kde1} shows the distribution of land quality within two countries selected in the paper—Greece and Nepal, obtained with a KDE using the Epanechnikov kernel.
 
-```{r worldMap, fig.cap="\\label{fig:kde1} Kernel Density of Land Quality in Greece and Nepal", echo=F, fig.width = 5, fig.height=3}
+```{r worldMap, fig.cap="\\label{fig:kde1} Kernel density of land quality in Greece and Nepal", echo=F, fig.width = 5, fig.height=3}
 plot(
   density(greeceCells$suit_new, kernel = "epanechnikov"),
   xlim = c(0, 1),
@@ -191,7 +191,7 @@ legend(
 )
 ```
 
-Below is our summary table of important variables for the first model. The dependent variable is `numLang`, which is the number of languages whose "traditional homeland" intersects with the country's boundary. Additional covariates are measures of centrality and variablity of the geographic data, the log of the country's 1995 population, human migration distance from Africa, and distance from a large body of water. While some other variables in the provided dataset have missing values for some countries, note that all variables included in the first regression are known for all countries.
+Table \ref{tab:summaryPrint} shows summary statistics of important variables for the first model. The dependent variable is `numLang`, which is the number of languages whose "traditional homeland" intersects with the country's boundary. Additional covariates are measures of centrality and variablity of the geographic data, the log of the country's 1995 population, human migration distance from Africa, and distance from a large body of water. While some other variables in the provided dataset have missing values for some countries, note that all variables included in the first regression are known for all countries.  
 
 ```{r summary, results='hide', echo=F}
 count = function(x) {
@@ -244,11 +244,12 @@ sumTable <- data %>% select(
       'lnPop95'
     )
   ) %>%
-  mutate_if(is.numeric, ~ round(., 2)) %>% slice(5, 4, 2, 3, 7, 6)
+  mutate_if(is.numeric, ~ round(., 2)) %>% slice(5, 4, 2, 3, 7)
 ```
+
 ```{r summaryPrint, results='show', echo=F}
-knitr::kable(sumTable[, 1:6])
-knitr::kable(sumTable[, 7:ncol(sumTable)])
+knitr::kable(sumTable, toprule = '', bottomrule = '', booktabs = TRUE, linesep = c(""), caption = 'Summary statistics for covariates in Analysis 1') %>% row_spec(0, angle = 90)
+
 ```
 
 
@@ -257,7 +258,7 @@ knitr::kable(sumTable[, 7:ncol(sumTable)])
 The first model regresses the (log) number of languages within each country on the features described above. Michalopolous presents five different regression models, each containing a different number of covariates. The model, as described in the original paper, is the following:
 
 $$
-\ln\left(\text{numLang}_i\right) = \beta_0 + \beta_1*\text{absLat}_i + \beta_2*\text{sdElev}_i + \beta_3*\text{sdSuit}_i + \beta_4* X_i + \epsilon_i
+\ln\left(\text{numLang}_i\right) = \beta_0 + \beta_1*\text{absLat}_i + \beta_2*\text{sdElev}_i + \beta_3*\text{sdSuitable}_i + \beta_4* X_i + \epsilon_i
 $$
 The first model only includes absolute latitude, the second model adds the mean and standard deviation of both elevation and land quality within each country, and the remaining models add additional covariates $X_i$.
 
@@ -334,7 +335,7 @@ summary(model5)
 
 ### Critique of Assumptions
 
-## Robustness check 
+## Robustness Check 
 
 ### Table 2A
 
@@ -505,11 +506,11 @@ As with the previous analysis, the geographic features are derived from a datase
 
 To obtain the number of languages in each virtual country, Michalopolous simply intersected the shapefile provided in the World Language Mapping System with the grid of countries. However, probably due to the proprietary nature of the WLMS, the "number of languages" variable was withheld from the public data download, meaning we could not exactly replicate the analysis.
 
-Fortunately, we stumbled across the *Geo-referencing of Ethnic Groups* (GREG) [@weidmann_representing_2010]  dataset, which contains a shapefile of the locations of ethnic groups across the world. As Michalopolous was only using linguistic diversity as a proxy for ethnic diversity, we decided it would be smart to model ethnic diversity directly, with the GREG dataset.
+Fortunately, we stumbled across the *Geo-referencing of Ethnic Groups* (GREG) [@weidmann_representing_2010] dataset, which contains a shapefile of the locations of ethnic groups across the world. As Michalopolous was only using linguistic diversity as a proxy for ethnic diversity, we decided it would be useful to try to see if the original paper's results held up with the GREG data.
 
 The original GREG dataset required some manipulation to get it in a format suitable to swap in for the WLMS. For details, see the appendix, which shows the geoprocessing steps performed with the `geopandas` module in Python.
 
-In the original paper, Michalopolous described the steps he took to filter the virtual countries, on criteria mostly based on the amount of "coverage" each country had in the WLMS data. In other words, if a large portion of a virtual country was in an area which contained no languages—for example, the Sahara Desert—that virtual country was excluded from the analysis. The data download, which contained the virtual countries after the filter had been applied, contained 1,888 virtual countries. Due to differences in coverage between WLMS and GREG, applying the same criteria to GREG would have resulted in 2,476 countries. Including these additional countries would have required obtaining the other features for these areas, and as Michalopolous did not document this procedure wee, we decided that this was not feasible. The end result was that we looked at the intersection of WLMS and GREG, which excluded the ~600 countries from the dataset derived from GREG, but also about 30 countries that had enough coverage in WLMS, but did not in GREG.
+In the original paper, Michalopolous described the steps he took to filter the virtual countries, on criteria mostly based on the amount of "coverage" each country had in the WLMS data. In other words, if a large portion of a virtual country was in an area which contained no languages—for example, the Sahara Desert—that virtual country was excluded from the analysis. The data download, which contained the virtual countries after the filter had been applied, contained 1,888 virtual countries. Due to differences in coverage between WLMS and GREG, applying the same criteria to GREG would have resulted in 2,476 countries. Including these additional countries would have required obtaining the other features for these areas, and as Michalopolous did not document this procedure well, we decided that this was not feasible. The end result was that we looked at the intersection of WLMS and GREG, which excluded the ~600 countries from the dataset derived from GREG, but also about 30 countries that had enough coverage in WLMS, but did not in GREG.
 
 Finally, the actual regressions performed in the paper used a dataset that was further filtered down. That is, there must have been at least 3000 people living in the virtual country in 1995, and at least 10 of the 25 cells that comprise a virtual country had to have been completely covered by the WLMS dataset. We applied both of these criteria here as well when reproducing the regressions.
 
@@ -544,7 +545,7 @@ modelCols = c('lnLang', 'sdElev', 'sdSuitable', 'avgElev', 'avgSuitable',
 The model specification for this analysis is almost exactly the same as before, except now each unit $i$ is a virtual country, and "numLang" is really the number of unique ethnic groups:
 
 $$
-\ln\left(\text{numLang}_i\right) = \beta_0 + \beta_1*\text{absLat}_i + \beta_2*\text{sdElev}_i + \beta_3*\text{sdSuit}_i + \beta_4* X_i + \epsilon_i
+\ln\left(\text{numLang}_i\right) = \beta_0 + \beta_1*\text{absLat}_i + \beta_2*\text{sdElev}_i + \beta_3*\text{sdSuitable}_i + \beta_4* X_i + \epsilon_i
 $$
 Additionally, regressions 2.5, 2.6, and 2.7 are performed only on virtual countries meeting a certain criterion. Regression 2.5 looks only at virtual countries located in the tropics, 2.6 looks at countries not located in the tropics, and 2.7 filters to virtual countries that are located entirely within a real country.
 
