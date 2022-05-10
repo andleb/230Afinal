@@ -127,7 +127,7 @@ colnames(data) = c('countryCode', 'entryYear', 'countryName', 'avgTemp',
                    'dispElev', 'numLang', 'suitableCells', 'dispSuitable',
                    'climate', 'soil', 'sdClimate', 'sdSoil', 'sdSuitable', 
                    'avgSuitable', 'pop95', 'area', 'lnLang', 'africa', 
-                   'europe', 'americas', 'lnPop95', 'migrationDist', 
+                   'europe', 'americas', 'lnPopDens1995', 'migrationDist', 
                    'lnArea', 'pctIndigenous', 'lnPopDens1500', 
                    'agriTran', 'asiaPac')
 ```
@@ -213,7 +213,7 @@ sumTable <- data %>% select(
     'lnArea',
     'seaDist',
     'migrationDist',
-    'lnPop95'
+    'lnPopDens1995'
   )
 ) %>%
   summarise_each(
@@ -243,7 +243,7 @@ sumTable <- data %>% select(
       'lnArea',
       'seaDist',
       'migrationDist',
-      'lnPop95'
+      'lnPopDens1995'
     )
   ) %>%
   mutate_if(is.numeric, ~ round(., 2)) %>% slice(5, 4, 2, 3, 7)
@@ -265,7 +265,7 @@ The first model only includes absolute latitude, the second model adds the mean 
 
 ## Replication
 
-As the code and the data files were provided completely by the author, we were able to replicate the results perfectly. Note that all variables, including indicators, were standardized by Michalopolous, so we did so here as well. Unsurprisingly, given the increasing number of features, the observed $R^2$ also increases with each model. In all four models, variation in elevation, and variation in land quality were useful predictors of the log number of languages, as originally hypothesized by the author. Mean precipitation, log of area, and migratory distance from Ethiopia were also significant predictors whenever they were included.
+As the code and the data files were provided completely by the author, we were able to replicate the results perfectly. Table \ref{tab:tbl1Print} perfectly replicates Table 1 in the original paper, and Table \ref{tab:tbl1Info} displays additional information about each model. Note that all variables, including indicators, were standardized by Michalopolous, so we did so here as well. Unsurprisingly, given the increasing number of features, the observed $R^2$ also increases with each model. In all four models, variation in elevation, and variation in land quality were useful predictors of the log number of languages, as originally hypothesized by the author. Mean precipitation, log of area, and migratory distance from Ethiopia were also significant predictors whenever they were included.
 
 ```{r standardize1, echo=F}
 standardize = function(vec) {return ((vec - mean(vec, na.rm = TRUE)) / sd(vec, na.rm = TRUE))}
@@ -273,7 +273,7 @@ standardize = function(vec) {return ((vec - mean(vec, na.rm = TRUE)) / sd(vec, n
 modelCols = c('entryYear', 'avgTemp', 'avgPrecip', 'seaDist', 'avgElev',
              'sdElev', 'absLat', 'numLang', 'dispSuitable', 'climate',
              'soil', 'sdClimate', 'sdSoil', 'sdSuitable', 'avgSuitable',
-             'pop95', 'area', 'lnLang', 'lnPop95', 'migrationDist',
+             'pop95', 'area', 'lnLang', 'lnPopDens1995', 'migrationDist',
              'lnArea', 'pctIndigenous', 'lnPopDens1500', 'agriTran',
              'americas', 'europe', 'africa', 'asiaPac')
 # for (col in modelCols) {
@@ -298,7 +298,7 @@ model1.3 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
 
 ```{r model1.4, echo=F}
 model1.4 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
-            + avgPrecip + avgTemp + lnArea + seaDist + migrationDist + lnPop95
+            + avgPrecip + avgTemp + lnArea + seaDist + migrationDist + lnPopDens1995
             + africa + europe + americas + asiaPac, dataStd)
 ```
 
@@ -309,7 +309,7 @@ for (col in modelCols) {
 }
 
 model1.5 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
-            + avgPrecip + avgTemp + lnArea + seaDist + migrationDist + lnPop95
+            + avgPrecip + avgTemp + lnArea + seaDist + migrationDist + lnPopDens1995
             + lnPopDens1500 + entryYear + agriTran
             + africa + europe + americas + asiaPac, dataStd, na.action = na.exclude)
 ```
@@ -333,7 +333,7 @@ pvals$column = substr(row.names(pvals), 10, nchar(row.names(pvals)))
 
 order = c('sdElev', 'sdSuitable', 'avgElev', 'avgSuitable', 'absLat', 
           'avgPrecip', 'avgTemp', 'lnArea', 'seaDist', 'migrationDist',
-          'lnPop95', 'lnPopDens1500', 'entryYear', 'agriTran')
+          'lnPopDens1995', 'lnPopDens1500', 'entryYear', 'agriTran')
 tbl1 = coefs %>% pivot_wider(names_from = "model", values_from = '.') %>% 
   merge(ses %>% pivot_wider(names_from = "model", values_from = '.'),
         by = 'column',
@@ -371,15 +371,16 @@ tbl1format %>% select(order) %>%
 
 ```{r tbl1Info, results='show', echo=F}
 tbl1info = data.frame(
-  Model = 1:5,
-  Continent = c(F, F, F, F, T),
-  Observations = sapply(models, function(model) { nobs(get(model))}),
-  RSq = sapply(models, function(model) {
+  model = 1:5,
+  cont = c("No", "No", "No", "No", "Yes"),
+  nobs = sapply(models, function(model) { nobs(get(model))}),
+  rsq = sapply(models, function(model) {
     formatC(summary(get(model))$r.squared, digits = 2, format = 'f')
     }), row.names = NULL
   )
 tbl1info %>% 
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE,
+               col.names = c('Model', 'Continental Indicators', 'Observations', 'R-Squared'),
                caption = "Information for each model in cross-country analysis.")
 ```
 
@@ -392,7 +393,7 @@ tbl1info %>%
 
 ```{r model1.1Rob, results='hide', echo=F, eval=T}
 robust1.1 <- glm.nb(numLang ~ absLat + sdSuitable + sdElev + avgElev + avgSuitable + avgPrecip + avgTemp + lnArea 
-                    + seaDist + migrationDist + lnPop95 + lnPopDens1500 + entryYear + agriTran + 
+                    + seaDist + migrationDist + lnPopDens1995 + lnPopDens1500 + entryYear + agriTran + 
                       africa + europe + americas + asiaPac
                     , data, na.action = na.exclude)
 ```
@@ -405,7 +406,7 @@ NOTE: Matches!
 
 ```{r model1.2Rob, results='hide', echo=F, eval=T}
 robust1.2 <- lm(lnLang ~ absLat + dispElev + dispSuitable + avgElev + avgSuitable + avgPrecip +  avgTemp +  
-                lnArea +  seaDist + migrationDist +  lnPop95 + + lnPopDens1500 + entryYear + agriTran + 
+                lnArea +  seaDist + migrationDist +  lnPopDens1995 + lnPopDens1500 + entryYear + agriTran + 
                 africa + europe + americas + asiaPac,
                 data, na.action = na.exclude)
                     
@@ -418,7 +419,7 @@ NOTE: matches or exceeds in significance, as well
 
 ```{r model1.3Rob, results='hide', echo=F, eval=T}
 robust1.3 <- lm(lnLang ~ absLat + sdElev + sdClimate + avgElev + climate + avgPrecip +  avgTemp +  
-                lnArea +  seaDist + migrationDist +  lnPop95 +  lnPopDens1500 + entryYear + agriTran + 
+                lnArea +  seaDist + migrationDist +  lnPopDens1995 +  lnPopDens1500 + entryYear + agriTran + 
                 africa + europe + americas + asiaPac,
                 data, na.action = na.exclude)
                     
@@ -436,7 +437,7 @@ NOTE: matches!
 data1.4 <- data[(data$suitableCells > 9) & (data$lnArea > -10), ]
 
 robust1.4 <- lm(lnLang ~ absLat + sdElev + sdSoil + avgElev + soil + avgPrecip +  avgTemp +  
-                lnArea +  seaDist + migrationDist +  lnPop95 +  lnPopDens1500 + entryYear + agriTran + 
+                lnArea +  seaDist + migrationDist +  lnPopDens1995 +  lnPopDens1500 + entryYear + agriTran + 
                 africa + europe + americas + asiaPac,
                 data1.4, na.action = na.exclude)
                     
