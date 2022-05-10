@@ -335,47 +335,47 @@ pvals$column = substr(row.names(pvals), 10, nchar(row.names(pvals)))
 order = c('sdElev', 'sdSuitable', 'avgElev', 'avgSuitable', 'absLat', 
           'avgPrecip', 'avgTemp', 'lnArea', 'seaDist', 'migrationDist',
           'lnPopDens1995', 'lnPopDens1500', 'entryYear', 'agriTran')
-tbl1 = coefs %>% pivot_wider(names_from = "model", values_from = '.') %>% 
-  merge(ses %>% pivot_wider(names_from = "model", values_from = '.'),
-        by = 'column',
-        suffixes = c('Estimate', 'SE')
-  ) %>% 
-  merge(pvals %>% pivot_wider(names_from = "model", values_from = '.'),
-        by = 'column') %>%
-  slice(match(order, column)) %>% 
-  column_to_rownames(var = "column") 
+
+pvalsPivoted = pvals %>% pivot_wider(names_from = "model", values_from = '.') %>%
+  slice(match(order, column))
+
+tbl1 = rbind(coefs %>% pivot_wider(names_from = "model", values_from = '.'),
+             ses %>% pivot_wider(names_from = "model", values_from = '.'))
+tbl1$stat = c(rep('Estimate', 19), rep('SE', 19))
+indices = c(rbind(match(order, tbl1$column), match(order, tbl1$column) + 19))
+tbl1 = tbl1 %>% slice(indices)
 ```
 
 ```{r tbl1Print, results='show', echo=F}
 tbl1format = data.frame(tbl1)
 for (model in models) {
-  estimCol = paste0(model, 'Estimate')
-  seCol = paste0(model, 'SE')
-  notNA = !is.na(tbl1[, estimCol])
+  estimRows = !is.na(tbl1[, model]) & (tbl1$stat == 'Estimate')
+  seRows = !is.na(tbl1[, model]) & (tbl1$stat == 'SE')
+
+  tbl1format[estimRows, model] = sprintf(fmt = "%.3f", tbl1[estimRows, model] %>% unlist() %>% as.numeric())
+  tbl1format[seRows, model] = paste0("(", sprintf(fmt = "%.3f", tbl1[seRows, model] %>% unlist() %>% as.numeric()), ")")
   
-  tbl1format[notNA, estimCol] = as.character(formatC(tbl1format[notNA, estimCol], digits = 3, format = 'f'))
-  tbl1format[notNA, seCol] = as.character(formatC(tbl1format[notNA, seCol], digits = 3, format = 'f'))
-  significant = tbl1[notNA, model] <= .01
-  
-  tbl1format[notNA, estimCol] = cell_spec(tbl1format[notNA, estimCol], italic = significant)
-  tbl1format[notNA, seCol] = cell_spec(tbl1format[notNA, seCol], italic = significant)
+  significant = rep(pvalsPivoted[, model] < .01, each = 2)
+  significant[is.na(significant)] = FALSE
+  tbl1format[estimRows, model] = cell_spec(tbl1format[estimRows, model], italic = significant[estimRows])
+  tbl1format[seRows, model] = cell_spec(tbl1format[seRows, model], italic = significant[seRows])
 }
 
-rownames(tbl1format) = c('Variation in elevation', 'Variation in land quality',
-                           'Mean elevation', 'Mean land quality',
-                           'Absolute latitude', 'Mean precipitation',
-                           'Mean temperature', 'Ln(Area)',
-                           'Distance from the sea', 'Migratory dist. from Ethiopia',
-                           'Ln(Population density in 1995)', 'Ln(Population density in 1500)',
-                           'Year of independence', 'Time of agricultural transition')
+tbl1format$name = c('Variation in elevation', NA, 'Variation in land quality', NA,
+                    'Mean elevation', NA, 'Mean land quality', NA,
+                    'Absolute latitude', NA, 'Mean precipitation', NA,
+                    'Mean temperature', NA, 'Ln(Area)', NA,
+                    'Distance from the sea', NA, 'Migratory distance from Ethiopia', NA,
+                    'Ln(Population density in 1995)', NA, 'Ln(Population density in 1500)', NA,
+                    'Year of independence', NA, 'Timing of transition to agriculture', NA
+                    )
 
-order = c(1, 6, 2, 7, 3, 8, 4, 9, 5, 10)
-col.names = c(paste0("(", 1:5, ") Coef."), paste0("(", 1:5, ") S.E."))[order]
+col.names = c("Variable", paste0("(", 1:5, ")"))
 
-tbl1format %>% select(order) %>%
-  knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, linesep = c(""),
-             col.names = col.names, align = "r", row.names = T, 
-             caption = 'Main specification for the cross-country analysis. Italics indicate significance at the 99\\% level.', escape = F) %>% row_spec(0, angle = 90) %>% kable_styling(font_size = 8)
+tbl1format %>% select(8, 2:6) %>%
+  knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, linesep = c("", "\\addlinespace"),
+             col.names = col.names, align = "r", escape = F,
+             caption = 'Main specification for the cross-country analysis. Italics indicate significance at the 99\\% level.')
 ```
 
 ```{r tbl1Info, results='show', echo=F}
@@ -632,9 +632,6 @@ ses = coeftest(model2.1, vcov = vcovCL, cluster = ~countryCode)[, 2]
 pvals = coeftest(model2.1, vcov = vcovCL, cluster = ~countryCode)[, 4]
 ```
 
-```{r model2.1table, echo=F, results='show'}
-coeftest(model2.1, vcov = vcovCL, cluster = ~countryCode)
-```
 
 ```{r model2.2, echo=F}
 model2.2 = lm(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat1,
@@ -642,10 +639,6 @@ model2.2 = lm(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat
 coefs = c(coefs, coeftest(model2.2, vcov = vcovCL, cluster = ~countryCode)[, 1])
 ses = c(ses, coeftest(model2.2, vcov = vcovCL, cluster = ~countryCode)[, 2])
 pvals = c(pvals, coeftest(model2.2, vcov = vcovCL, cluster = ~countryCode)[, 4])
-```
-
-```{r model2.2table, echo=F, results='show'}
-coeftest(model2.2, vcov = vcovCL, cluster = ~countryCode)
 ```
 
 ```{r model2.3, echo=F}
@@ -658,9 +651,6 @@ ses = c(ses, coeftest(model2.3, vcov = vcovCL, cluster = ~countryCode)[, 2])
 pvals = c(pvals, coeftest(model2.3, vcov = vcovCL, cluster = ~countryCode)[, 4])
 ```
 
-```{r model2.3table, echo=F, results='show'}
-coeftest(model2.3, vcov = vcovCL, cluster = ~countryCode)
-```
 
 ```{r model2.4, echo=F}
 model2.4 = lm(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat1
@@ -670,10 +660,6 @@ model2.4 = lm(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat
 coefs = c(coefs, coeftest(model2.4, vcov = vcovCL, cluster = ~countryCode)[, 1])
 ses = c(ses, coeftest(model2.4, vcov = vcovCL, cluster = ~countryCode)[, 2])
 pvals = c(pvals, coeftest(model2.4, vcov = vcovCL, cluster = ~countryCode)[, 4])
-```
-
-```{r model2.4table, echo=F, results='show'}
-coeftest(model2.4, vcov = vcovCL, cluster = ~countryCode)
 ```
 
 ```{r model2.5, echo=F}
@@ -690,10 +676,6 @@ ses = c(ses, coeftest(model2.5, vcov = vcovCL, cluster = ~countryCode)[, 2])
 pvals = c(pvals, coeftest(model2.5, vcov = vcovCL, cluster = ~countryCode)[, 4])
 ```
 
-```{r model2.5table, echo=F, results='show'}
-coeftest(model2.5, vcov = vcovCL, cluster = ~countryCode)
-```
-
 ```{r model2.6, echo=F}
 condition = (data2$totalPop95 >= 3000) & (data2$suitableCells >= 10) & (data2$tropics == 0)
 for (col in modelCols) {
@@ -706,10 +688,6 @@ model2.6 = lm(lnLang6 ~ sdElev6 + sdSuitable6 + avgElev6 + avgSuitable6 + absLat
 coefs = c(coefs, coeftest(model2.6, vcov = vcovCL, cluster = ~countryCode)[, 1])
 ses = c(ses, coeftest(model2.6, vcov = vcovCL, cluster = ~countryCode)[, 2])
 pvals = c(pvals, coeftest(model2.6, vcov = vcovCL, cluster = ~countryCode)[, 4])
-```
-
-```{r model2.6table, echo=F, results='show'}
-coeftest(model2.6, vcov = vcovCL, cluster = ~countryCode)
 ```
 
 ```{r model2.7, echo=F}
@@ -726,9 +704,6 @@ ses = c(ses, coeftest(model2.7, vcov = vcovCL, cluster = ~countryCode)[, 2])
 pvals = c(pvals, coeftest(model2.7, vcov = vcovCL, cluster = ~countryCode)[, 4])
 ```
 
-```{r model2.7table, echo=F, results='show'}
-coeftest(model2.7, vcov = vcovCL, cluster = ~countryCode)
-```
 
 ```{r tbl4, results='hide', echo=F}
 models = paste0("model2.", 1:7)
@@ -748,23 +723,14 @@ order = c('sdElev', 'sdSuitable', 'avgElev', 'avgSuitable', 'absLat',
           'avgPrecip', 'avgTemp', 'lnArea', 'seaDist', 'waterArea',
           'withinCountry', 'numCountry', 'migrationDist', 'lnPopDens95')
 
-pvalsPivoted = pvals %>% pivot_wider(names_from = "model", values_from = 'pvals') %>% slice(match(order, column))
-# tbl4 = coefs %>% pivot_wider(names_from = "model", values_from = 'coefs') %>%
-#   merge(ses %>% pivot_wider(names_from = "model", values_from = 'ses'),
-#         by = 'column',
-#         suffixes = c('Estimate', 'SE')
-#   ) %>%
-#   merge(pvals %>% pivot_wider(names_from = "model", values_from = 'pvals'),
-#         by = 'column') %>%
-#   slice(match(order, column)) %>%
-#   column_to_rownames(var = "column")
-# tbl4
+pvalsPivoted = pvals %>% pivot_wider(names_from = "model", values_from = 'pvals') %>% 
+  slice(match(order, column))
 
-tbl4 = rbind(coefs %>% pivot_wider(names_from = "model", values_from = 'coefs'), ses %>% pivot_wider(names_from = "model", values_from = 'ses'))
+tbl4 = rbind(coefs %>% pivot_wider(names_from = "model", values_from = 'coefs'), 
+             ses %>% pivot_wider(names_from = "model", values_from = 'ses'))
 tbl4$stat = c(rep('Estimate', 15), rep('SE', 15))
 indices = c(rbind(match(order, tbl4$column), match(order, tbl4$column) + 15))
 tbl4 = tbl4 %>% slice(indices)
-
 ```
 
 ```{r tbl4Print, results='show', echo=F}
@@ -788,15 +754,14 @@ tbl4format$name = c('Variation in elevation', NA, 'Variation in land quality', N
                            'Mean temperature', NA, 'Ln(Area)', NA,
                            'Distance from the sea', NA, 'Water area', NA,
                          'Within-country indicator', NA, 'Number of countries', NA,
-                         'Migratory dist. from Ethiopia', NA, 'Ln(Population density in 1995)', NA)
+                         'Migratory distance from Ethiopia', NA, 'Ln(Population density in 1995)', NA)
 
 col.names = c("Variable", paste0("(", 1:7, ")"))
 
 tbl4format %>% select(10, 2:8) %>%
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, linesep = c("", "\\addlinespace"),
-             col.names = col.names, align = "r", row.names = F,
-             caption = 'Main specification for the virtual analysis. Italics indicate significance at the 99\\% level.', escape = F)# %>% row_spec(0, angle = 90) %>% kable_styling(font_size = 8)
-
+             col.names = col.names, align = "r", escape = F,
+             caption = 'Main specification for the virtual country analysis. Italics indicate significance at the 99\\% level.')
 ```
 
 
@@ -813,7 +778,7 @@ tbl4format %>% select(10, 2:8) %>%
 \newpage
 # Appendix: code
 <!-- NOTE: add code chunks to be displayed here -->
-```{r codeAppendix, ref.label=c('dataImport1', 'rename1', 'greeceNepal', 'worldMap', 'summary', 'standardize1', 'model1.1', 'model1.2', 'model1.3', 'model1.4', 'model1.5', 'tbl1', 'tbl1Print', 'tbl1Info', 'model1.1Rob', 'model1.2Rob', 'model1.3Rob', 'model1.4Rob', 'data_import2b', 'model1.2.1', 'model1.2.2', 'model1.2.3', 'model1.2.4', 'model1.2.5', 'model1.2.6', 'model1.2.7', 'dataImport2', 'rename2', 'model2.1', 'model2.1table', 'model2.2', 'model2.2table', 'model2.3', 'model2.3table', 'model2.4', 'model2.4table', 'model2.5', 'model2.5table', 'model2.6', 'model2.6 table', 'model2.7', 'model2.7table', 'tbl4', 'tbl4Print', 'tbl4Info'), echo=T, eval=F}
+```{r codeAppendix, ref.label=c('dataImport1', 'rename1', 'greeceNepal', 'worldMap', 'summary', 'standardize1', 'model1.1', 'model1.2', 'model1.3', 'model1.4', 'model1.5', 'tbl1', 'tbl1Print', 'tbl1Info', 'model1.1Rob', 'model1.2Rob', 'model1.3Rob', 'model1.4Rob', 'data_import2b', 'model1.2.1', 'model1.2.2', 'model1.2.3', 'model1.2.4', 'model1.2.5', 'model1.2.6', 'model1.2.7', 'dataImport2', 'rename2', 'model2.1', 'model2.2', 'model2.3', 'model2.4', 'model2.5', 'model2.6', 'model2.7', 'tbl4', 'tbl4Print', 'tbl4Info'), echo=T, eval=F}
 
 ```
 
