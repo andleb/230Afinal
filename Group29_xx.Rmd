@@ -316,17 +316,20 @@ model1.5 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
 
 ```{r tbl1, results='hide', echo=F}
 models = paste0("model1.", 1:5)
-coefs = sapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 1]}) %>% unlist() %>% data.frame()
+coefs = sapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 1]}) %>% 
+  unlist() %>% data.frame()
 coefs$model = substr(row.names(coefs), 1, 8)
 coefs$column = substr(row.names(coefs), 10, nchar(row.names(coefs)))
 
-ses = sapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 2]}) %>% unlist() %>% data.frame()
+ses = sapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 2]}) %>% 
+  unlist() %>% data.frame()
 ses$model = substr(row.names(ses), 1, 8)
 ses$column = substr(row.names(ses), 10, nchar(row.names(ses)))
 
-ts = sapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 4]}) %>% unlist() %>% data.frame()
-ts$model = substr(row.names(ts), 1, 8)
-ts$column = substr(row.names(ts), 10, nchar(row.names(ts)))
+pvals = sapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 4]}) %>% 
+  unlist() %>% data.frame()
+pvals$model = substr(row.names(pvals), 1, 8)
+pvals$column = substr(row.names(pvals), 10, nchar(row.names(pvals)))
 
 order = c('sdElev', 'sdSuitable', 'avgElev', 'avgSuitable', 'absLat', 
           'avgPrecip', 'avgTemp', 'lnArea', 'seaDist', 'migrationDist',
@@ -336,7 +339,7 @@ tbl1 = coefs %>% pivot_wider(names_from = "model", values_from = '.') %>%
         by = 'column',
         suffixes = c('Estimate', 'SE')
   ) %>% 
-  merge(ts %>% pivot_wider(names_from = "model", values_from = '.'),
+  merge(pvals %>% pivot_wider(names_from = "model", values_from = '.'),
         by = 'column') %>%
   slice(match(order, column)) %>% 
   column_to_rownames(var = "column") 
@@ -366,7 +369,7 @@ tbl1format %>% select(order) %>%
              caption = 'Main specification for the cross-country analysis. Italics indicate significance at the 99\\% level.', escape = F) %>% row_spec(0, angle = 90) 
 ```
 
-```{r tbl1info, results='show', echo=F}
+```{r tbl1Info, results='show', echo=F}
 tbl1info = data.frame(
   Model = 1:5,
   Continent = c(F, F, F, F, T),
@@ -375,7 +378,9 @@ tbl1info = data.frame(
     formatC(summary(get(model))$r.squared, digits = 2, format = 'f')
     }), row.names = NULL
   )
-tbl1info %>% knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, caption = "Information for each model in cross-country analysis.")
+tbl1info %>% 
+  knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE,
+               caption = "Information for each model in cross-country analysis.")
 ```
 
 
@@ -708,7 +713,7 @@ coeftest(model2.7, vcov = vcovCL, cluster = ~countryCode)
 \newpage
 # Appendix: code
 <!-- NOTE: add code chunks to be displayed here -->
-```{r codeAppendix, ref.label=c('dataImport1', 'rename1', 'greeceNepal', 'worldMap', 'summary', 'standardize1', 'model1.1', 'model1.2', 'model1.3', 'model1.4', 'model1.5', 'model1.1Rob', 'model1.2Rob', 'model1.3Rob', 'model1.4Rob', 'data_import2b', 'model1.2.1', 'model1.2.2', 'model1.2.3', 'model1.2.4', 'model1.2.5', 'model1.2.6', 'model1.2.7', 'dataImport2', 'rename2', 'model2.1', 'model2.1table', 'model2.2', 'model2.2table', 'model2.3', 'model2.3table', 'model2.4', 'model2.4table', 'model2.5', 'model2.5table', 'model2.6', 'model2.6 table', 'model2.7', 'model2.7table'), echo=T, eval=F}
+```{r codeAppendix, ref.label=c('dataImport1', 'rename1', 'greeceNepal', 'worldMap', 'summary', 'standardize1', 'model1.1', 'model1.2', 'model1.3', 'model1.4', 'model1.5', 'tbl1', 'tbl1Print', 'tbl1Info', 'model1.1Rob', 'model1.2Rob', 'model1.3Rob', 'model1.4Rob', 'data_import2b', 'model1.2.1', 'model1.2.2', 'model1.2.3', 'model1.2.4', 'model1.2.5', 'model1.2.6', 'model1.2.7', 'dataImport2', 'rename2', 'model2.1', 'model2.1table', 'model2.2', 'model2.2table', 'model2.3', 'model2.3table', 'model2.4', 'model2.4table', 'model2.5', 'model2.5table', 'model2.6', 'model2.6 table', 'model2.7', 'model2.7table'), echo=T, eval=F}
 
 ```
 
