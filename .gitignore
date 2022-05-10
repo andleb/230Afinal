@@ -43,3 +43,4 @@ vignettes/*.pdf
 .Renviron
 
 .~lock*
+*.log

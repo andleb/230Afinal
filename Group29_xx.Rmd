@@ -8,6 +8,8 @@ author:
 email: 
   - "andrej_leban@berkeley.edu"
   - "ischmidt20@berkeley.edu"
+nocite: | 
+  @ding_linear_2022
 # date: "`r format(Sys.time(), '%B %d, %Y')`"
 header-includes:
   - \usepackage{float, amsthm, amsmath, amssymb, bm, enumitem, latexsym, color, minipage-marginpar, caption, multirow, verbatim, xcolor, setspace, fancyhdr}
@@ -397,6 +399,8 @@ tbl1info %>%
 
 ### Critique of Assumptions
 
+`TODO:`
+
 ## Robustness Check 
 
 ### Table 2A
@@ -769,7 +773,8 @@ tbl4format %>% select(10, 2:8) %>%
 
 ## Robustness Check
 
-<!-- # "Re-analysis" -->
+
+
 
 
 # References
