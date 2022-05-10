@@ -375,7 +375,8 @@ col.names = c("Variable", paste0("(", 1:5, ")"))
 tbl1format %>% select(8, 2:6) %>%
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, linesep = c("", "\\addlinespace"),
              col.names = col.names, align = "r", escape = F,
-             caption = 'Main specification for the cross-country analysis. Italics indicate significance at the 99\\% level.')
+             caption = 'Main specification for the cross-country analysis. Italics indicate significance at the 99\\% level.') %>%
+  row_spec(seq(2, 28, 2), font_size = 8)
 ```
 
 ```{r tbl1Info, results='show', echo=F}
@@ -761,7 +762,8 @@ col.names = c("Variable", paste0("(", 1:7, ")"))
 tbl4format %>% select(10, 2:8) %>%
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, linesep = c("", "\\addlinespace"),
              col.names = col.names, align = "r", escape = F,
-             caption = 'Main specification for the virtual country analysis. Italics indicate significance at the 99\\% level.')
+             caption = 'Main specification for the virtual country analysis. Italics indicate significance at the 99\\% level.') %>%
+  row_spec(seq(2, 28, 2), font_size = 8)
 ```
 
 
