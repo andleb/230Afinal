@@ -451,7 +451,7 @@ lines(y, y * residModel$coefficients['y'], col = 'red', type = 'l')
 ```{r model1.1Rob, results='hide', echo=F, eval=T}
 robust1.1 <- glm.nb(numLang ~ absLat + sdSuitable + sdElev + avgElev + avgSuitable + avgPrecip + avgTemp + lnArea 
                     + seaDist + migrationDist + lnPopDens1995 + lnPopDens1500 + entryYear + agriTran + 
-                      africa + europe + americas + asiaPac
+                    africa + europe + americas + asiaPac
                     , data, na.action = na.exclude)
 ```
 
@@ -504,6 +504,84 @@ robust1.4 <- lm(lnLang ~ absLat + sdElev + sdSoil + avgElev + soil + avgPrecip +
 summary(robust1.4)
 ```
 NOTE: matches!
+
+
+```{r tbl2a, results='hide', echo=F}
+models <- paste0("robust1.", 1:4)
+coeffs <- lapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 1]})
+names(coeffs) <- models
+
+vars <- unique(unlist(lapply(coeffs, names)))
+
+coeffDf <- data.frame(row.names = vars)
+for(model in models) coeffDf[names(coeffs[[model]]), model] <- coeffs[[model]]
+
+ses <- lapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 2]})
+names(ses) <- models
+sesDf <- data.frame(row.names = vars)
+for(model in models) sesDf[names(ses[[model]]), model] <- ses[[model]]
+
+pvals <- lapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 4]})
+names(pvals) <- models
+pvalsDf <- data.frame(row.names = vars)
+for(model in models) pvalsDf[names(pvals[[model]]), model] <- pvals[[model]]
+
+order = c('sdElev', 'sdSuitable', 'dispElev', 'dispSuitable', 'sdClimate',
+          'climate', 'sdSoil', 'soil')
+
+coeffDf <- coeffDf[order, ]
+sesDf   <- sesDf[order, ]
+pvalsDf <- pvalsDf[order, ]
+```
+
+```{r tbl2aPrint, results='show', echo=F}
+tbl1format = data.frame(tbl1)
+
+for (model in models) {
+  estimRows = !is.na(tbl1[, model]) & (tbl1$stat == 'Estimate')
+  seRows = !is.na(tbl1[, model]) & (tbl1$stat == 'SE')
+
+  tbl1format[estimRows, model] = sprintf(fmt = "%.3f", tbl1[estimRows, model] %>% unlist() %>% as.numeric())
+  tbl1format[seRows, model] = paste0("(", sprintf(fmt = "%.3f", tbl1[seRows, model] %>% unlist() %>% as.numeric()), ")")
+  
+  significant = rep(pvalsPivoted[, model] < .01, each = 2)
+  significant[is.na(significant)] = FALSE
+  tbl1format[estimRows, model] = cell_spec(tbl1format[estimRows, model], italic = significant[estimRows])
+  tbl1format[seRows, model] = cell_spec(tbl1format[seRows, model], italic = significant[seRows])
+}
+
+tbl1format$name = c('Variation in elevation', NA, 'Variation in land quality', NA,
+                    'Mean elevation', NA, 'Mean land quality', NA,
+                    'Absolute latitude', NA, 'Mean precipitation', NA,
+                    'Mean temperature', NA, 'Ln(Area)', NA,
+                    'Distance from the sea', NA, 'Migratory distance from Ethiopia', NA,
+                    'Ln(Population density in 1995)', NA, 'Ln(Population density in 1500)', NA,
+                    'Year of independence', NA, 'Timing of transition to agriculture', NA
+                    )
+
+col.names = c("Variable", paste0("(", 1:5, ")"))
+
+tbl1format %>% select(8, 2:6) %>%
+  knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, linesep = c("", "\\addlinespace"),
+             col.names = col.names, align = "r", escape = F,
+             caption = 'Main specification for the cross-country analysis. Italics indicate significance at the 1\\% level.') %>%
+  row_spec(seq(2, 28, 2), font_size = 8)
+```
+
+```{r tbl2aInfo, results='show', echo=F}
+tbl1info = data.frame(
+  model = 1:5,
+  cont = c("No", "No", "No", "No", "Yes"),
+  nobs = sapply(models, function(model) { nobs(get(model))}),
+  rsq = sapply(models, function(model) {
+    formatC(summary(get(model))$r.squared, digits = 2, format = 'f')
+    }), row.names = NULL
+  )
+tbl1info %>% 
+  knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE,
+               col.names = c('Model', 'Continental Indicators', 'Observations', '$R^2$'), escape = F,
+               caption = "Information for each model in cross-country analysis.")
+```
 
 
 ## Table 2B
@@ -615,6 +693,8 @@ robust1.2.7 <- lm(elf9 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsui
 ```{r model1.2.Table, results='show', echo=F, eval=T}
 summary(robust1.2.7)
 ```
+
+`TODO: Print Table`
 
 OK
 
@@ -922,6 +1002,8 @@ Seems OK
 
 `TODO: explain why we cannot do the last 2`
 
+`TODO: Print Table 5A`
+
 
 
 
@@ -1011,8 +1093,7 @@ robust2.2.5 <- lm_robust(lnLang ~ absLat + sdElev + sdSoil + avgElev + soil +  a
 ```{r model2.2.5RobTable, results='show', echo=F, eval=T}
 summary(robust2.2.5)
 ```
-
-
+`TODO: Print Table 5B`
 
 
 # Conclusion
