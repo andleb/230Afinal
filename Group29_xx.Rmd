@@ -35,6 +35,7 @@ library(conflicted)
 library(MASS)
 library(sandwich)
 library(lmtest)
+library(estimatr)
 
 # extra:
 library(gsubfn)
@@ -386,7 +387,7 @@ col.names = c("Variable", paste0("(", 1:5, ")"))
 tbl1format %>% select(8, 2:6) %>%
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, linesep = c("", "\\addlinespace"),
              col.names = col.names, align = "r", escape = F,
-             caption = 'Main specification for the cross-country analysis. Italics indicate significance at the 99\\% level.') %>%
+             caption = 'Main specification for the cross-country analysis. Italics indicate significance at the 1\\% level.') %>%
   row_spec(seq(2, 28, 2), font_size = 8)
 ```
 
@@ -701,13 +702,14 @@ pvals = c(pvals, coeftest(model2.3, vcov = vcovCL, cluster = ~countryCode)[, 4])
 
 
 ```{r model2.4, echo=F}
-model2.4 = lm(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat1
+model2.4 = lm_robust(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat1
             + avgPrecip1 + avgTemp1 + lnArea1 + seaDist1 + waterArea1
             + withinCountry1 + numCountry1 + migrationDist1 + lnPopDens951,
-            data2 %>% filter(condition))
-coefs = c(coefs, coeftest(model2.4, vcov = vcovCL, cluster = ~countryCode)[, 1])
-ses = c(ses, coeftest(model2.4, vcov = vcovCL, cluster = ~countryCode)[, 2])
-pvals = c(pvals, coeftest(model2.4, vcov = vcovCL, cluster = ~countryCode)[, 4])
+            data2 %>% filter(condition),
+            fixed_effects = ~countryCode, se_type = "stata")
+coefs = c(coefs, 0, model2.4$coefficients)
+ses = c(ses, 0, model2.4$std.error)
+pvals = c(pvals, 0, model2.4$p.value)
 ```
 
 ```{r model2.5, echo=F}
@@ -715,13 +717,14 @@ condition = (data2$totalPop95 >= 3000) & (data2$suitableCells >= 10) & (data2$tr
 for (col in modelCols) {
   data2[condition, paste0(col, '5')] = standardize(data2[condition, col])
 }
-model2.5 = lm(lnLang5 ~ sdElev5 + sdSuitable5 + avgElev5 + avgSuitable5 + absLat5
+model2.5 = lm_robust(lnLang5 ~ sdElev5 + sdSuitable5 + avgElev5 + avgSuitable5 + absLat5
             + avgPrecip5 + avgTemp5 + lnArea5 + seaDist5 + waterArea5
             + withinCountry5 + numCountry5 + migrationDist5 + lnPopDens955,
-            data2 %>% filter(condition))
-coefs = c(coefs, coeftest(model2.5, vcov = vcovCL, cluster = ~countryCode)[, 1])
-ses = c(ses, coeftest(model2.5, vcov = vcovCL, cluster = ~countryCode)[, 2])
-pvals = c(pvals, coeftest(model2.5, vcov = vcovCL, cluster = ~countryCode)[, 4])
+            data2 %>% filter(condition),
+            fixed_effects = ~countryCode, se_type = "stata")
+coefs = c(coefs, 0, model2.5$coefficients)
+ses = c(ses, 0, model2.5$std.error)
+pvals = c(pvals, 0, model2.5$p.value)
 ```
 
 ```{r model2.6, echo=F}
@@ -729,13 +732,14 @@ condition = (data2$totalPop95 >= 3000) & (data2$suitableCells >= 10) & (data2$tr
 for (col in modelCols) {
   data2[condition, paste0(col, '6')] = standardize(data2[condition, col])
 }
-model2.6 = lm(lnLang6 ~ sdElev6 + sdSuitable6 + avgElev6 + avgSuitable6 + absLat6
+model2.6 = lm_robust(lnLang6 ~ sdElev6 + sdSuitable6 + avgElev6 + avgSuitable6 + absLat6
             + avgPrecip6 + avgTemp6 + lnArea6 + seaDist6 + waterArea6
             + withinCountry6 + numCountry6 + migrationDist6 + lnPopDens956,
-            data2 %>% filter(condition))
-coefs = c(coefs, coeftest(model2.6, vcov = vcovCL, cluster = ~countryCode)[, 1])
-ses = c(ses, coeftest(model2.6, vcov = vcovCL, cluster = ~countryCode)[, 2])
-pvals = c(pvals, coeftest(model2.6, vcov = vcovCL, cluster = ~countryCode)[, 4])
+            data2 %>% filter(condition),
+            fixed_effects = ~countryCode, se_type = "stata")
+coefs = c(coefs, 0, model2.6$coefficients)
+ses = c(ses, 0, model2.6$std.error)
+pvals = c(pvals, 0, model2.6$p.value)
 ```
 
 ```{r model2.7, echo=F}
@@ -743,27 +747,32 @@ condition = (data2$totalPop95 >= 3000) & (data2$suitableCells >= 10) & (data2$wi
 for (col in modelCols) {
   data2[condition, paste0(col, '7')] = standardize(data2[condition, col])
 }
-model2.7 = lm(lnLang7 ~ sdElev7 + sdSuitable7 + avgElev7 + avgSuitable7 + absLat7
+model2.7 = lm_robust(lnLang7 ~ sdElev7 + sdSuitable7 + avgElev7 + avgSuitable7 + absLat7
             + avgPrecip7 + avgTemp7 + lnArea7 + seaDist7 + waterArea7
             + migrationDist7 + lnPopDens957,
-            data2 %>% filter(condition))
-coefs = c(coefs, coeftest(model2.7, vcov = vcovCL, cluster = ~countryCode)[, 1])
-ses = c(ses, coeftest(model2.7, vcov = vcovCL, cluster = ~countryCode)[, 2])
-pvals = c(pvals, coeftest(model2.7, vcov = vcovCL, cluster = ~countryCode)[, 4])
+            data2 %>% filter(condition),
+            fixed_effects = ~countryCode, se_type = "stata")
+coefs = c(coefs, 0, model2.7$coefficients)
+ses = c(ses, 0, model2.7$std.error)
+pvals = c(pvals, 0, model2.7$p.value)
 ```
 
 
 ```{r tbl4, results='hide', echo=F}
 models = paste0("model2.", 1:7)
-coefs = data.frame(coefs, row.names = paste0("model2.", cumsum(names(coefs) == "(Intercept)"), ".", names(coefs)))
+
+names(coefs)[names(coefs) == ""] = "(Intercept)"
+coefs = data.frame(coefs, row.names = paste0("model2.", cumsum(names(coefs) %in% c("(Intercept)", "")), ".", names(coefs)))
 coefs$model = substr(row.names(coefs), 1, 8)
 coefs$column = substr(row.names(coefs), 10, nchar(row.names(coefs)) - 1)
 
-ses = data.frame(ses, row.names = paste0("model2.", cumsum(names(ses) == "(Intercept)"), ".", names(ses)))
+names(ses)[names(ses) == ""] = "(Intercept)"
+ses = data.frame(ses, row.names = paste0("model2.", cumsum(names(ses) %in% c("(Intercept)", "")), ".", names(ses)))
 ses$model = substr(row.names(ses), 1, 8)
 ses$column = substr(row.names(ses), 10, nchar(row.names(ses)) - 1)
 
-pvals = data.frame(pvals, row.names = paste0("model2.", cumsum(names(pvals) == "(Intercept)"), ".", names(pvals)))
+names(pvals)[names(pvals) == ""] = "(Intercept)"
+pvals = data.frame(pvals, row.names = paste0("model2.", cumsum(names(pvals) %in% c("(Intercept)", "")), ".", names(pvals)))
 pvals$model = substr(row.names(pvals), 1, 8)
 pvals$column = substr(row.names(pvals), 10, nchar(row.names(pvals)) - 1)
 
@@ -809,7 +818,7 @@ col.names = c("Variable", paste0("(", 1:7, ")"))
 tbl4format %>% select(10, 2:8) %>%
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, linesep = c("", "\\addlinespace"),
              col.names = col.names, align = "r", escape = F,
-             caption = 'Main specification for the virtual country analysis. Italics indicate significance at the 99\\% level.') %>%
+             caption = 'Main specification for the virtual country analysis. Italics indicate significance at the 1\\% level.') %>%
   row_spec(seq(2, 28, 2), font_size = 8)
 ```
 
@@ -828,7 +837,7 @@ tbl4info = data.frame(
 tbl4info %>% 
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE,
                linesep = c(""), align = 'r',
-               col.names = c('Model', 'Continental Indicators', 'Observations', 'WLMS $R^2$', 'GREG $R^2$'), escape = F,
+               col.names = c('Model', 'Country Indicators', 'Observations', 'WLMS $R^2$', 'GREG $R^2$'), escape = F,
                caption = "Information for each model in virtual country analysis.")
 ```
 
@@ -838,6 +847,13 @@ Here, the reported standard errors are cluster-robust, with the clusters defined
 
 ## Comparison
 
+One major difference between GREG and WLMS is that the footprint of each unique ethnic group in GREG are larger than that for each unique language in the WLMS. This makes sense, considering that GREG only contains about 900 entries, yet there are a few thousand unique languages in the WLMS. As a result, the dependent variable is generally a lot smaller in our replication compared to that in the original paper. Michalopolous reports the median number of languages per virtual country as 3, yet here, more than half of the virtual countries contain only one ethnic group. A possible solution to adjust for this would be to simply reduce the size of the virtual countries, but this was infeasible due to our inability to recalculate the rest of the features.
+
+As for the actual results, the first noticeable difference is that of the $R^2$ coefficients. In all models, the $R^2$ is considerably lower in our replication compared to the original. For example, absolute latitude on its own explains just 4% of the variation in log number of ethnic groups, compared to 33% in the original. However, the coefficient is still significant at the 1% level and ha negative sign, as it does in the original.
+
+Beyond the worse fits overall, the inference around the coefficients does not differ much between the two models. If a variable is significant at the 1% level in one model, there is a good chance it is significant at at least the 5% level in its counterpart, or vice versa. Variation in elevation and variation in land quality continue to have a large relationship with the outcome, leading further evidence to the author's original hypothesis. The number of real countries intersected by a virtual country is also a really strong predictor in both sets of models. Michalopolous ponders that this "may be suggestive of the effect of state formation on ethnic diversity and/or an artifact of modern states having drawn political borders along ethnic boundaries." This certainly seems reasonable, but given how diminished the effects of some of the variables are in our replication, it is surprising that this one is still so large. Perhaps this is another artifact of the aforementioned reduced granularity of GREG compared to WLMS, that ethnic groups are even more strongly correlated with national boundaries than languages are.
+
+However, there are a few inconsistencies. One is that distance from the sea is significant for every model here, but only for model 2.5 (tropical locations) in the original. One explanation for this could be that the few virtual countries with multiple ethnic groups just happen to be located farther inland, leading to a strong correlation, whereas the number of languages in virtual countries is more variable, making it harder for a single feature to dominate.
 
 ## Robustness Check
 
