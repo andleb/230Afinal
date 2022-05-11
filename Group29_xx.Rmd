@@ -405,22 +405,41 @@ tbl1info %>%
                caption = "Information for each model in cross-country analysis.")
 ```
 
-The interpretation of these results is much the same as in the original paper. In all four models, variation in elevation, and variation in land quality were useful predictors of the log number of languages, as originally hypothesized by the author. Naturally, the effect of absolute latitude becomes insignificant once precipitation and temperature are introduced.
+The interpretation of these results is much the same as in the original paper. In all four models, variation in elevation, and variation in land quality were useful predictors of the log number of languages, as originally hypothesized by the author.
 
-The final model introduces variables related to a country's history. The log of population density in 1500 does have a significant effect (at larger thresholds), and the author suggests "conditional on geographic characteristics, contemporary ethnic diversity may have been influenced by a country’s historical levels of development." However, the other features entered here are insignificant, and even the sign of the density coefficient goes against intuition. It seems more natural that countries that were denser in 1500 would have greater ethnolinguistic diversity today, simply due to having more people to split, yet the model suggests the opposite. It could also be that this new feature is simply taking the effect of the 1990 density feature, as the two are very strongly correlated.
-
-Another thing to note is that we noticed some inaccuracies with the feature for year of independence. For example, the United States was listed as 1816, as opposed to 1776 or 1783. Other long-existing countries, including many European states were also given this 1816 date. Additionally, former Soviet republics were all (correctly) given a year of 1991, further emphasizing that independence year in general is almost arbitrary—it would have been surprising if it had a significant relationship.
-
-The author has an interesting interpretation of the distance from sea coefficient:
+The effects of the geographic variables are also noteworthy. Naturally, the effect of absolute latitude becomes insignificant once precipitation and temperature are introduced, as those two are highly correlated with distance from the equator. Between models 1.1 and 1.2, and also 1.2 and 1.3, the observed $R^2$ makes sizeable jumps, indicating that these geographic features are very useful in explaining linguistic diversity. About the distance distance from sea coefficient, the author has this intruiging interpretation:
 
 > ... areas that are increasingly isolated from the sea have been experiencing limited population mixing and thus should, on average, display higher ethnolinguistic fractionalization. It should be noted, however, that mean distance from the coast also captures the vulnerability of different areas to both the incidence and the intensity of invasion and colonization. Thus, the coefficient should be interpreted cautiously.
 
 As the coefficient was never much more than one standard error above zero anyway, it is easy to ignore this effect entirely.
 
+The final model introduces variables related to a country's history. The log of population density in 1500 does have a significant effect (at larger thresholds), and the author suggests "conditional on geographic characteristics, contemporary ethnic diversity may have been influenced by a country’s historical levels of development." However, the other features entered here are insignificant, and even the sign of the density coefficient goes against intuition. It seems more natural that countries that were denser in 1500 would have greater ethnolinguistic diversity today, simply due to having more people to split, yet the model suggests the opposite. It could also be that this new feature is simply taking the effect of the 1990 density feature, as the two are very strongly correlated. Therefore, we consider it unlikely that such "historical levels of development" have much effect on modern diversity.
+
+Another thing to note is that we noticed some inaccuracies with the provided years of independence. For example, the United States was listed as 1816, as opposed to 1776 or 1783. Other long-existing countries, such as Portugal and Denmark, were also given this 1816 value. Additionally, former Soviet republics were all (correctly) given a year of 1991, further emphasizing that independence year in general is almost arbitrary—it would have been surprising if it had a significant relationship with the outcome.
 
 ## Critique of Assumptions
 
-As stated before, this model 
+As stated before, this model only requires two main assumptions:
+
+1. The functional form of \ref{eq:model1} is correct.
+2. The error terms are independent.
+
+Both assumptions are hard to take fully for granted. Starting with the second, it is likely that there is some spatial correlation between neighboring countries, leading to dependence among the error terms. However, such correlation could have already been sufficiently modeled by including geographic features such as migration distance and average temperature. Additionally, the virtual country analysis, which we will reanalyze in Section \ref{virtual}, shows that the results of the model still hold after abstracting away from established country boundaries.
+
+To informally test the whether or not the linearity assumption holds, Figure \ref{fig:resid1} shows the residual plot for the fifth model. While there is no curved relationship in the plot, it is clear that the residuals tend to increase as the dependent variable increases. This means that there is likely some other feature or combination of features which significantly impacts the log number of languages, which this model does not include. The residuals for the fifth model are what is plotted, but given it is the most specified model, it is expected that residual plots for the other models would look even worse.
+
+Somewhat coincidentally, the residuals do look roughly homoskedastic, even though that assumption was relaxed. Another diagnostic plot that is commonly used is a Normal Q-Q plot of the residuals, but as this model does not require normality, we will not include such a plot here.
+
+```{r resid1, fig.cap="\\label{fig:resid1} Residual Plot for Model 1.5", echo=F, fig.width = 6.5, fig.height=3}
+yhat = model1.5$residuals
+y = model1.5$model$lnLang
+plot(y, yhat, xlab = "", ylab = "", cex.axis = .75)
+title(ylab = "Residuals", xlab = "Ln(Number of Languages)", mgp = c(2, .5, 0), cex.lab = .75)
+residModel = lm(yhat ~ y)
+abline(0, 0)
+lines(y, y * residModel$coefficients['y'], col = 'red', type = 'l')
+```
+
 
 # Robustness Check of Analysis 1
 
@@ -596,7 +615,7 @@ summary(robust1.2.7)
 
 OK
 
-# Analysis 2: Virtual Country (Re-Analysis)
+# Analysis 2: Virtual Country (Re-Analysis)  \label{virtual}
 
 The second analysis Michalopolous presents in his paper is essentially a repeat of the the previous, but aggregating over "virtual" countries instead of real ones, "in order to investigate whether the relationship between geography and ethnic diversity holds true at an arbitrary level of aggregation."
 
@@ -811,7 +830,7 @@ tbl4info %>%
 
 ## Robustness Check
 
-```{r model2.1Rob, results='hide', echo=F, eval=T}
+```{r model2.1Rob, results='hide', echo=F, eval=F}
 condition = (data2$totalPop95 >= 3000) & (data2$suitableCells >= 10)
 # NOTE: see "Table 7A" in the code
 for (col in modelCols) {
@@ -825,7 +844,7 @@ robust2.1 <-  glm.nb(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 +
                     , na.action = na.exclude)
 ```
 
-```{r model2.1RobTable, results='show', echo=F, eval=T}
+```{r model2.1RobTable, results='show', echo=F, eval=F}
 summary(robust1.1)
 ```
 
