@@ -401,7 +401,7 @@ tbl1info = data.frame(
   )
 tbl1info %>% 
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE,
-               col.names = c('Model', 'Continental Indicators', 'Observations', 'R-Squared'),
+               col.names = c('Model', 'Continental Indicators', 'Observations', '$R^2$'), escape = F,
                caption = "Information for each model in cross-country analysis.")
 ```
 
@@ -817,14 +817,16 @@ tbl4info = data.frame(
   model = 1:7,
   cont = c("No", "No", "No", "Yes", "Yes", "Yes", "Yes"),
   nobs = sapply(models, function(model) { nobs(get(model))}),
+  rsqOG = formatC(c(.31, .36, .53, .70, .73, .56, .66), digits = 2, format = 'f'),
   rsq = sapply(models, function(model) {
     formatC(summary(get(model))$r.squared, digits = 2, format = 'f')
-    }), row.names = NULL
+    }), 
+  row.names = NULL
   )
 tbl4info %>% 
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE,
-               linesep = c(""), 
-               col.names = c('Model', 'Continental Indicators', 'Observations', 'R-Squared'),
+               linesep = c(""), align = 'r',
+               col.names = c('Model', 'Continental Indicators', 'Observations', 'WLMS $R^2$', 'GREG $R^2$'), escape = F,
                caption = "Information for each model in virtual country analysis.")
 ```
 
@@ -860,7 +862,7 @@ summary(robust1.1)
 \newpage
 # Appendix: code
 <!-- NOTE: add code chunks to be displayed here -->
-```{r codeAppendix, ref.label=c('dataImport1', 'rename1', 'greeceNepal', 'worldMap', 'summary', 'standardize1', 'model1.1', 'model1.2', 'model1.3', 'model1.4', 'model1.5', 'tbl1', 'tbl1Print', 'tbl1Info', 'model1.1Rob', 'model1.2Rob', 'model1.3Rob', 'model1.4Rob', 'data_import2b', 'model1.2.1', 'model1.2.2', 'model1.2.3', 'model1.2.4', 'model1.2.5', 'model1.2.6', 'model1.2.7', 'dataImport2', 'rename2', 'model2.1', 'model2.2', 'model2.3', 'model2.4', 'model2.5', 'model2.6', 'model2.7', 'tbl4', 'tbl4Print', 'tbl4Info'), echo=T, eval=F}
+```{r codeAppendix, ref.label=c('dataImport1', 'rename1', 'greeceNepal', 'worldMap', 'summary', 'standardize1', 'model1.1', 'model1.2', 'model1.3', 'model1.4', 'model1.5', 'tbl1', 'tbl1Print', 'tbl1Info', 'resid1', 'model1.1Rob', 'model1.2Rob', 'model1.3Rob', 'model1.4Rob', 'data_import2b', 'model1.2.1', 'model1.2.2', 'model1.2.3', 'model1.2.4', 'model1.2.5', 'model1.2.6', 'model1.2.7', 'dataImport2', 'rename2', 'model2.1', 'model2.2', 'model2.3', 'model2.4', 'model2.5', 'model2.6', 'model2.7', 'tbl4', 'tbl4Print', 'tbl4Info'), echo=T, eval=F}
 
 ```
 
