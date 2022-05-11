@@ -660,9 +660,9 @@ data2$lnnmbrlang = log(data2$nmbrlang)
 colnames(data2) = c('virtCode', 'countryCode', 'climate', 'soil',
                    'sdClimate', 'sdSoil', 'seaDist', 'avgElev', 'avgPrecip',
                    'avgTemp', 'sdElev', 'waterArea', 'avgSuitable',
-                   'sdSuitable', 'popDens95', 'range', 'area', 'withinCountry', 
+                   'sdSuitable', 'popDens95', 'dispSuitable', 'area', 'withinCountry', 
                    'numCountry', 'migrationDist', 'lnLang', 'totalPop95',
-                   'absLat', 'tropics', 'erange_gecon', 'lnArea', 
+                   'absLat', 'tropics', 'dispElev', 'lnArea', 
                    'lnPopDens95', 'pctIndigenous', 'diffAvgElev',
                    'diffAvgPrecip', 'diffAvgTemp', 'diffAvgSuit',
                    'overlap', 'suitableCells', 'numLang')
@@ -865,95 +865,158 @@ However, there are a few noteworthy inconsistencies. One is that distance from t
 
 ## Robustness Check 1
 
-```{r model2.1Rob, results='hide', echo=F, eval=F}
-#TODO: calculate cluster-robust by hand?
-#     GEE
-
-
+```{r model2.1.1Rob, results='hide', echo=F, eval=T}
 # NOTE: seems unstandardized
-robust2.1 <-  glm.nb(numLang ~ absLat + sdElev + sdSuitable +  avgElev + avgSuitable +  avgPrecip +  avgTemp +  lnArea +  seaDist + 
-                     waterArea +  withinCountry +  numCountry + migrationDist + lnPopDens95
-                     + factor(countryCode),
-                     data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 3000)),
-                     na.action = na.exclude)
+robust2.1.1 <-  glm.nb(numLang ~ absLat + sdElev + sdSuitable +  avgElev + avgSuitable +  avgPrecip +  avgTemp +  lnArea +  seaDist + 
+                       waterArea +  withinCountry +  numCountry + migrationDist + lnPopDens95
+                       + factor(countryCode),
+                       data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 3000)),
+                       na.action = na.exclude)
 
-robust2.1geem <- geem(formula = numLang ~ absLat + sdElev + sdSuitable +  avgElev + avgSuitable +  avgPrecip +
-                                avgTemp +  lnArea +  seaDist + waterArea +  withinCountry +  numCountry + 
-                                migrationDist + lnPopDens95,
-                    id = countryCode,
-                    nodummy = TRUE,
-                    data = data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 3000)),
-                    family = MASS::negative.binomial(theta = robust2.1$theta, link = 'log'),
-                    sandwich = TRUE,
-                    corstr = "independence",
-                    scale.fix = TRUE,
-                    init.phi = robust2.1$theta
-                    )
+robust2.1.1geem <- geem(formula = numLang ~ absLat + sdElev + sdSuitable +  avgElev + avgSuitable +  avgPrecip +
+                                  avgTemp +  lnArea +  seaDist + waterArea +  withinCountry +  numCountry + 
+                                  migrationDist + lnPopDens95,
+                        id = countryCode,
+                        nodummy = TRUE,
+                        data = data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 3000)),
+                        family = MASS::negative.binomial(theta = robust2.1.1$theta, link = 'log'),
+                        sandwich = TRUE,
+                        corstr = "independence",
+                        scale.fix = TRUE,
+                        init.phi = robust2.1.1$theta
+                        )
 ```
 
-```{r model2.1RobTable, results='show', echo=F, eval=F}
-summary(robust2.1)
+```{r model2.1.1RobTable, results='show', echo=F, eval=T}
+summary(robust2.1.1geem)
 ```
 
-`TODO: check if fixed effect OK`
 
-```{r model2.2Rob, results='hide', echo=F, eval=F}
-robust2.2 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +  avgPrecip + avgTemp +  lnArea + 
-                       seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
-                      data2 %>% filter((data2$suitableCells >= 10)),
-                      fixed_effects = ~countryCode,
-                      se_type = "stata")
+```{r model2.1.2Rob, results='hide', echo=F, eval=T}
+robust2.1.2 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +  avgPrecip + avgTemp +  lnArea + 
+                         seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
+                         data2 %>% filter((data2$suitableCells >= 10)),
+                         fixed_effects = ~countryCode,
+                         se_type = "stata")
 ```
 
-```{r model2.2RobTable, results='show', echo=F, eval=F}
-summary(robust2.2)
+```{r model2.1.2RobTable, results='show', echo=F, eval=T}
+summary(robust2.1.2)
 ```
 
 OK
 
-```{r model2.3Rob, results='hide', echo=F, eval=F}
-robust2.3 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +  avgPrecip + avgTemp +  lnArea + 
-                       seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
-                      data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 50000)),
-                      fixed_effects = ~countryCode,
-                      se_type = "stata")
+```{r model2.1.3Rob, results='hide', echo=F, eval=T}
+robust2.1.3 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +  avgPrecip + avgTemp +  lnArea + 
+                         seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
+                         data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 50000)),
+                         fixed_effects = ~countryCode,
+                         se_type = "stata")
 ```
 
-```{r model2.3RobTable, results='show', echo=F, eval=F}
-summary(robust2.3)
+```{r model2.1.3RobTable, results='show', echo=F, eval=T}
+summary(robust2.1.3)
 ```
 
 Seems OK
 
-
-```{r model2.4Rob, results='hide', echo=F, eval=F}
-#FIXME: what's the difference between 3 & 4?
-robust2.4 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +  avgPrecip + avgTemp +  lnArea + 
-                       seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
-                      data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 50000)),
-                      fixed_effects = ~countryCode,
-                      se_type = "stata")
-```
-
-```{r model2.4RobTable, results='show', echo=F, eval=F}
-summary(robust2.4)
-```
+`TODO: explain why we cannot do the last 2`
 
 
-```{r model2.5Rob, results='hide', echo=F, eval=F}
-robust2.5 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +  avgPrecip + avgTemp +  lnArea + 
-                       seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
-                      data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 50000)),
-                      fixed_effects = ~countryCode,
-                      se_type = "stata")
-```
-
-```{r model2.5RobTable, results='show', echo=F, eval=F}
-summary(robust2.5)
-```
 
 
 ## Robustness Check 2
+
+
+
+```{r model2.2.1Rob, results='hide', echo=F, eval=T}
+robust2.2.1 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +  avgPrecip + avgTemp +  lnArea + 
+                         seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
+                         data2 %>% filter((data2$suitableCells == 25) & (data2$totalPop95 >= 3000)),
+                         fixed_effects = ~countryCode,
+                         se_type = "stata")
+```
+
+```{r model2.2.1RobTable, results='show', echo=F, eval=T}
+summary(robust2.2.1)
+```
+
+
+
+
+
+
+```{r model2.2.2Rob, results='hide', echo=F, eval=T}
+data222 <- data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 3000))
+sizePercentile <- quantile(data222$area, probs = seq(0, 1, length.out = 101))
+data222[, "sizePerc"] <- factor(cut(data222$area, sizePercentile))
+
+# NOTE: need to put the size percentile in manually, else doesn't work
+robust2.2.2 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +  avgPrecip + avgTemp +
+                         lnArea + seaDist + waterArea +  withinCountry +  numCountry +  migrationDist + 
+                         lnPopDens95 + sizePerc,
+                         data = data222,
+                         # fixed_effects = ~ c(countryCode, sizePerc),
+                         fixed_effects = ~ countryCode,
+                         se_type = "stata")
+```
+
+```{r model2.2.2RobTable, results='show', echo=F, eval=T}
+summary(robust2.2.2)
+```
+
+OK
+
+```{r model2.2.3Rob, results='hide', echo=F, eval=T}
+robust2.2.3 <- lm_robust(lnLang ~ absLat + dispElev + dispSuitable + avgElev + avgSuitable +  avgPrecip + avgTemp +  lnArea + 
+                         seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
+                         data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 3000)),
+                         fixed_effects = ~countryCode,
+                         se_type = "stata")
+```
+
+```{r model2.2.3RobTable, results='show', echo=F, eval=T}
+summary(robust2.2.3)
+```
+
+
+
+Very good match!
+
+
+```{r model2.2.4Rob, results='hide', echo=F, eval=T}
+robust2.2.4 <- lm_robust(lnLang ~ absLat + sdElev + sdClimate + avgElev + climate +  avgPrecip + avgTemp +  lnArea + 
+                         seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
+                         data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 3000)),
+                         fixed_effects = ~countryCode,
+                         se_type = "stata")
+```
+
+```{r model2.2.4RobTable, results='show', echo=F, eval=T}
+summary(robust2.2.4)
+```
+
+Not that good
+
+
+
+```{r model2.2.5Rob, results='hide', echo=F, eval=T}
+robust2.2.5 <- lm_robust(lnLang ~ absLat + sdElev + sdSoil + avgElev + soil +  avgPrecip + avgTemp +  lnArea + 
+                         seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
+                         data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 3000)),
+                         fixed_effects = ~countryCode,
+                         se_type = "stata")
+```
+
+```{r model2.2.5RobTable, results='show', echo=F, eval=T}
+summary(robust2.2.5)
+```
+
+
+
+
+# Conclusion
+
 
 # References
 
@@ -963,7 +1026,7 @@ summary(robust2.5)
 \newpage
 # Appendix: code
 <!-- NOTE: add code chunks to be displayed here -->
-```{r codeAppendix, ref.label=c('dataImport1', 'rename1', 'greeceNepal', 'worldMap', 'summary', 'standardize1', 'model1.1', 'model1.2', 'model1.3', 'model1.4', 'model1.5', 'tbl1', 'tbl1Print', 'tbl1Info', 'resid1', 'model1.1Rob', 'model1.2Rob', 'model1.3Rob', 'model1.4Rob', 'data_import2b', 'model1.2.1', 'model1.2.2', 'model1.2.3', 'model1.2.4', 'model1.2.5', 'model1.2.6', 'model1.2.7', 'dataImport2', 'rename2', 'model2.1', 'model2.2', 'model2.3', 'model2.4', 'model2.5', 'model2.6', 'model2.7', 'tbl4', 'tbl4Print', 'tbl4Info'), echo=T, eval=F}
+```{r codeAppendix, ref.label=c('dataImport1', 'rename1', 'greeceNepal', 'worldMap', 'summary', 'standardize1', 'model1.1', 'model1.2', 'model1.3', 'model1.4', 'model1.5', 'tbl1', 'tbl1Print', 'tbl1Info', 'resid1', 'model1.1Rob', 'model1.2Rob', 'model1.3Rob', 'model1.4Rob', 'data_import2b', 'model1.2.1', 'model1.2.2', 'model1.2.3', 'model1.2.4', 'model1.2.5', 'model1.2.6', 'model1.2.7', 'dataImport2', 'rename2', 'model2.1', 'model2.2', 'model2.3', 'model2.4', 'model2.5', 'model2.6', 'model2.7', 'tbl4', 'tbl4Print', 'tbl4Info', 'model2.1.1Rob', 'model2.1.2Rob', 'model2.1.3Rob', 'model2.2.1Rob', 'model2.2.2Rob', 'model2.2.3Rob', 'model2.2.4Rob', 'model2.2.5Rob'), echo=T, eval=F}
 
 ```
 
