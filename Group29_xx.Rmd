@@ -617,19 +617,31 @@ OK
 
 # Analysis 2: Virtual Country (Re-Analysis)  \label{virtual}
 
-The second analysis Michalopolous presents in his paper is essentially a repeat of the the previous, but aggregating over "virtual" countries instead of real ones, "in order to investigate whether the relationship between geography and ethnic diversity holds true at an arbitrary level of aggregation."
+The second analysis Michalopolous presents in his paper is essentially a repeat of the the first, but instead aggregating geographic and ethnic information over "virtual" countries instead of real ones. The stated motivation for this is "to investigate whether the relationship between geography and ethnic diversity holds true at an arbitrary level of aggregation."
 
-As with the previous analysis, the geographic features are derived from a dataset of cells, each of size .5-by.5 decimal degrees. However, instead of aggregating these cells at the country level as before, we now split up the world into blocks of size 2.5-by-2.5 decimal degrees, with each block containing 25 cells. Each block thus becomes a "virtual country."
+As with the previous analysis, the geographic features are derived from a dataset of cells, each of size .5-by.5 decimal degrees. However, instead of aggregating these cells at the country level as before, we now split up the world into blocks of size 2.5-by-2.5 decimal degrees, with each block containing 25 cells. Each block is precisely a "virtual country."
 
-To obtain the number of languages in each virtual country, Michalopolous simply intersected the shapefile provided in the World Language Mapping System with the grid of countries. However, probably due to the proprietary nature of the WLMS, the "number of languages" variable was withheld from the public data download, meaning we could not exactly replicate the analysis.
+To obtain the number of languages in each virtual country, Michalopolous simply intersected the shapefile provided in the World Language Mapping System with the newly-formed grid. However, probably due to the proprietary nature of the WLMS, the "number of languages" variable was withheld from the public data download, meaning we could not exactly replicate the analysis.
 
-Fortunately, we stumbled across the *Geo-referencing of Ethnic Groups* (GREG) [@weidmann_representing_2010] dataset, which contains a shapefile of the locations of ethnic groups across the world. As Michalopolous was only using linguistic diversity as a proxy for ethnic diversity, we decided it would be useful to try to see if the original paper's results held up with the GREG data.
+Fortunately, we stumbled across the *Geo-referencing of Ethnic Groups* (GREG) dataset [@weidmann_representing_2010], which contains a shapefile of the locations of 928 ethnic groups across the world. As Michalopolous was only using linguistic diversity as a proxy for ethnic diversity, we decided it would be useful to model ethnic diversity directly, to see if the original paper's results held up with the GREG data.
 
-The original GREG dataset required some manipulation to get it in a format suitable to swap in for the WLMS. For details, see the appendix, which shows the geoprocessing steps performed with the `geopandas` module in Python.
+## Data Cleaning
 
-In the original paper, Michalopolous described the steps he took to filter the virtual countries, on criteria mostly based on the amount of "coverage" each country had in the WLMS data. In other words, if a large portion of a virtual country was in an area which contained no languages—for example, the Sahara Desert—that virtual country was excluded from the analysis. The data download, which contained the virtual countries after the filter had been applied, contained 1,888 virtual countries. Due to differences in coverage between WLMS and GREG, applying the same criteria to GREG would have resulted in 2,476 countries. Including these additional countries would have required obtaining the other features for these areas, and as Michalopolous did not document this procedure well, we decided that this was not feasible. The end result was that we looked at the intersection of WLMS and GREG, which excluded the ~600 countries from the dataset derived from GREG, but also about 30 countries that had enough coverage in WLMS, but did not in GREG.
+The original GREG dataset required some manipulation to get it in a format suitable to swap in for the WLMS. Each polygonwas labeled with up to three ethnic groups, so we had to melt and then dissolve the polygons such that each polygon represented only one ethnic group, and each ethnic group was only assigned to one polygon. For details, see the appendix, which shows the geoprocessing steps performed with the `geopandas` module in Python.
+
+In the original paper, Michalopolous described the steps he took to filter the virtual countries, on criteria mostly based on the amount of "coverage" each country had in the WLMS data. If a large portion of a virtual country was an area which contained no languages—for example, the Sahara Desert—that virtual country was excluded from the analysis. The public data download, which contained the virtual countries after this filter had been applied, contained 1,888 virtual countries. Due to differences in coverage between WLMS and GREG, applying the same criteria to GREG would have resulted in 2,476 countries. Including these additional countries would have required obtaining the other features for these areas, and as Michalopolous did not document this procedure well, we decided that this was not feasible. The end result was that our dataset only included the intersection of the sets derived WLMS and GREG, which excluded the ~600 countries from the dataset derived from GREG, but also about 30 countries that had enough coverage in WLMS, but did not in GREG.
 
 Finally, the actual regressions performed in the paper used a dataset that was further filtered down. That is, there must have been at least 3000 people living in the virtual country in 1995, and at least 10 of the 25 cells that comprise a virtual country had to have been completely covered by the WLMS dataset. We applied both of these criteria here as well when reproducing the regressions.
+
+## Replication
+
+The model specification for this analysis is almost exactly the same as before, except now each unit $i$ is a virtual country, and "numLang" is really the number of unique ethnic groups:
+
+\begin{equation} \label{eq:model2}
+\ln\left(\text{numLang}_i\right) = \beta_0 + \beta_1*\text{absLat}_i + \beta_2*\text{sdElev}_i + \beta_3*\text{sdSuitable}_i + \beta_4* X_i + \epsilon_i
+\end{equation}
+
+Additionally, regressions 2.5, 2.6, and 2.7 are performed only on virtual countries meeting a certain criterion. Regression 2.5 looks only at virtual countries located in the tropics, 2.6 looks at countries not located in the tropics, and 2.7 filters to virtual countries that are located entirely within a real country.
 
 ```{r dataImport2, echo=F}
 data2 = read.dta13('data_raw/Tables4-7b.dta')
@@ -657,15 +669,6 @@ modelCols = c('lnLang', 'sdElev', 'sdSuitable', 'avgElev', 'avgSuitable',
               'withinCountry', 'numCountry', 'migrationDist', 'lnPopDens95')
 ```
 
-## Replication
-
-The model specification for this analysis is almost exactly the same as before, except now each unit $i$ is a virtual country, and "numLang" is really the number of unique ethnic groups:
-
-\begin{equation}
-\ln\left(\text{numLang}_i\right) = \beta_0 + \beta_1*\text{absLat}_i + \beta_2*\text{sdElev}_i + \beta_3*\text{sdSuitable}_i + \beta_4* X_i + \epsilon_i
-\end{equation}
-
-Additionally, regressions 2.5, 2.6, and 2.7 are performed only on virtual countries meeting a certain criterion. Regression 2.5 looks only at virtual countries located in the tropics, 2.6 looks at countries not located in the tropics, and 2.7 filters to virtual countries that are located entirely within a real country.
 
 ```{r model2.1, echo=F}
 condition = (data2$totalPop95 >= 3000) & (data2$suitableCells >= 10)
@@ -677,7 +680,6 @@ coefs = coeftest(model2.1, vcov = vcovCL, cluster = ~countryCode)[, 1]
 ses = coeftest(model2.1, vcov = vcovCL, cluster = ~countryCode)[, 2]
 pvals = coeftest(model2.1, vcov = vcovCL, cluster = ~countryCode)[, 4]
 ```
-
 
 ```{r model2.2, echo=F}
 model2.2 = lm(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat1,
@@ -829,6 +831,13 @@ tbl4info %>%
                col.names = c('Model', 'Continental Indicators', 'Observations', 'WLMS $R^2$', 'GREG $R^2$'), escape = F,
                caption = "Information for each model in virtual country analysis.")
 ```
+
+Table \ref{tab:tbl4Print}, shows the results of regressing the log of number of ethnic groups on different sets of features, reproducing Table 4 of the original paper. Note that the features here are very similar to the ones used in the cross-country analysis. The only differences are that features directly relating to real countries, such as independence year, have been swapped for features describing the position of the virtual country in relation to real countries. Table \ref{tab:tbl4Info} shows information about each model, including the observed $R^2$ in the original WLMS regression, and our GREG regression.
+
+Here, the reported standard errors are cluster-robust, with the clusters defined by the real country in which the centroid of each virtual country falls. Whether Stata applies any corrections by default is unclear, but the base formula should be the same as the one described in Section 24.4.1 of Peng Ding's lecture notes, which we implemented in R using the `sandwich` and `lmtest` packages. Michalopolous did not justify his decision to cluster by real country, and the reader would not know that he did so without checking the footnotes or his code. However, it seems a reasonable decision, considering that virtual countries within the same real country are certainly related beyond any similarities in their features.
+
+## Comparison
+
 
 ## Robustness Check
 
