@@ -8,8 +8,8 @@ author:
 email: 
   - "andrej_leban@berkeley.edu"
   - "ischmidt20@berkeley.edu"
-nocite: | 
-  @ding_linear_2022
+# nocite: | 
+#   @ding_linear_2022
 # date: "`r format(Sys.time(), '%B %d, %Y')`"
 header-includes:
   - \usepackage{float, amsthm, amsmath, amssymb, bm, enumitem, latexsym, color, minipage-marginpar, caption, multirow, verbatim, xcolor, setspace, fancyhdr}
@@ -36,6 +36,8 @@ library(MASS)
 library(sandwich)
 library(lmtest)
 library(estimatr)
+library(gee)
+library(geeM)
 
 # extra:
 library(gsubfn)
@@ -86,7 +88,7 @@ my_theme <- theme_minimal()
 `r #TODO: margins, font size, group name & name in upper right`
 
 <!-- LaTeX preamble -->
-  \newcommand{\E}{{\mathbb E}}
+\newcommand{\E}{{\mathbb E}}
 \newcommand{\se}{{\mathcal{E}}}
 \newcommand{\R}{{\mathbb R}}
 \renewcommand{\P}{{\mathbb P}}
@@ -115,7 +117,7 @@ my_theme <- theme_minimal()
 
 \pagestyle{fancy}
 \fancypagestyle{plain}{\pagestyle{fancy}}
-\fancyhead[R]{Group 29, Isaac Schmidt}
+\fancyhead[R]{Group 29: Andrej Leban, Isaac Schmidt}
 
 
 
@@ -843,7 +845,7 @@ tbl4info %>%
 
 Table \ref{tab:tbl4Print} shows the results of regressing the log of number of ethnic groups on different sets of features, reproducing Table 4 of the original paper. Note that the features here are very similar to the ones used in the cross-country analysis. The only differences are that features directly relating to real countries, such as independence year, have been swapped for features describing the position of the virtual country in relation to real countries. Table \ref{tab:tbl4Info} shows information about each model, including the observed $R^2$ in the original WLMS regression, and our GREG regression.
 
-Here, the reported standard errors are cluster-robust, with the clusters defined by the real country in which the centroid of each virtual country falls. Whether Stata applies any corrections by default is unclear, but the base formula should be the same as the one described in Section 24.4.1 of Peng Ding's lecture notes, which we implemented in R using the `sandwich` and `lmtest` packages. Michalopolous did not justify his decision to cluster by real country, and the reader would not know that he did so without checking the footnotes or his code. However, it seems a reasonable decision, considering that virtual countries within the same real country are certainly related beyond any similarities in their features.
+Here, the reported standard errors are cluster-robust, with the clusters defined by the real country in which the centroid of each virtual country falls. Whether Stata applies any corrections by default is unclear, but the base formula should be the same as the one described in Section 24.4.1 of Peng Ding's lecture notes [@ding_linear_2022], which we implemented in R using the `sandwich` and `lmtest` packages. Michalopolous did not justify his decision to cluster by real country, and the reader would not know that he did so without checking the footnotes or his code. However, it seems a reasonable decision, considering that virtual countries within the same real country are certainly related beyond any similarities in their features.
 
 Additionally, models 2.4 through 2.7 use country fixed effects. Again, exactly how to replicate the Stata code was not obvious, but the `lm_robust` function from the `estimatr` package appeared to work. This technique essentially just includes one indicator variable for each real country in the model, and then ignores the estimates for those variables in the output. Per Michalopolous:
 
@@ -859,29 +861,99 @@ Beyond the worse fits overall, the inference around the coefficients does not di
 
 However, there are a few noteworthy inconsistencies. One is that distance from the sea is significant for every model here, but only for model 2.5 (tropical locations) in the original. Another oddity of the tropical model is that the sign for variation in elevation flips to negative, and log of population density becomes a strong predictor. Without speculating on real-world phenomena, one reason for this could be differences in how virtual countries in tropical areas were filtered in the GREG dataset compared to WLMS.
 
-## Robustness Check
+# Robustness Check for Analysis 2
+
+## Robustness Check 1
 
 ```{r model2.1Rob, results='hide', echo=F, eval=F}
-condition = (data2$totalPop95 >= 3000) & (data2$suitableCells >= 10)
-# NOTE: see "Table 7A" in the code
-for (col in modelCols) {
-  data2[condition, paste0(col, '1')] = standardize(data2[condition, col])
-}
+#TODO: calculate cluster-robust by hand?
+#     GEE
 
-robust2.1 <-  glm.nb(lnLang1 ~ sdElev1 + sdSuitable1 + avgElev1 + avgSuitable1 + absLat1
-                    + avgPrecip1 + avgTemp1 + lnArea1 + seaDist1 + waterArea1
-                    + withinCountry1 + numCountry1 + migrationDist1 + lnPopDens951,
-                    data2 %>% filter(condition)
-                    , na.action = na.exclude)
+
+# NOTE: seems unstandardized
+robust2.1 <-  glm.nb(numLang ~ absLat + sdElev + sdSuitable +  avgElev + avgSuitable +  avgPrecip +  avgTemp +  lnArea +  seaDist + 
+                     waterArea +  withinCountry +  numCountry + migrationDist + lnPopDens95
+                     + factor(countryCode),
+                     data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 3000)),
+                     na.action = na.exclude)
+
+robust2.1geem <- geem(formula = numLang ~ absLat + sdElev + sdSuitable +  avgElev + avgSuitable +  avgPrecip +
+                                avgTemp +  lnArea +  seaDist + waterArea +  withinCountry +  numCountry + 
+                                migrationDist + lnPopDens95,
+                    id = countryCode,
+                    nodummy = TRUE,
+                    data = data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 3000)),
+                    family = MASS::negative.binomial(theta = robust2.1$theta, link = 'log'),
+                    sandwich = TRUE,
+                    corstr = "independence",
+                    scale.fix = TRUE,
+                    init.phi = robust2.1$theta
+                    )
 ```
 
 ```{r model2.1RobTable, results='show', echo=F, eval=F}
-summary(robust1.1)
+summary(robust2.1)
+```
+
+`TODO: check if fixed effect OK`
+
+```{r model2.2Rob, results='hide', echo=F, eval=F}
+robust2.2 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +  avgPrecip + avgTemp +  lnArea + 
+                       seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
+                      data2 %>% filter((data2$suitableCells >= 10)),
+                      fixed_effects = ~countryCode,
+                      se_type = "stata")
+```
+
+```{r model2.2RobTable, results='show', echo=F, eval=F}
+summary(robust2.2)
+```
+
+OK
+
+```{r model2.3Rob, results='hide', echo=F, eval=F}
+robust2.3 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +  avgPrecip + avgTemp +  lnArea + 
+                       seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
+                      data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 50000)),
+                      fixed_effects = ~countryCode,
+                      se_type = "stata")
+```
+
+```{r model2.3RobTable, results='show', echo=F, eval=F}
+summary(robust2.3)
+```
+
+Seems OK
+
+
+```{r model2.4Rob, results='hide', echo=F, eval=F}
+#FIXME: what's the difference between 3 & 4?
+robust2.4 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +  avgPrecip + avgTemp +  lnArea + 
+                       seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
+                      data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 50000)),
+                      fixed_effects = ~countryCode,
+                      se_type = "stata")
+```
+
+```{r model2.4RobTable, results='show', echo=F, eval=F}
+summary(robust2.4)
 ```
 
 
+```{r model2.5Rob, results='hide', echo=F, eval=F}
+robust2.5 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +  avgPrecip + avgTemp +  lnArea + 
+                       seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
+                      data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 50000)),
+                      fixed_effects = ~countryCode,
+                      se_type = "stata")
+```
+
+```{r model2.5RobTable, results='show', echo=F, eval=F}
+summary(robust2.5)
+```
 
 
+## Robustness Check 2
 
 # References
 
