@@ -261,14 +261,23 @@ knitr::kable(sumTable, toprule = '', bottomrule = '', booktabs = TRUE, linesep =
 
 The first model regresses the (log) number of languages within each country on the features described above. Michalopolous presents five different regression models, each containing a different number of covariates. The model, as described in the original paper, is the following:
 
-$$
+\begin{equation} \label{eq:model1}
 \ln\left(\text{numLang}_i\right) = \beta_0 + \beta_1*\text{absLat}_i + \beta_2*\text{sdElev}_i + \beta_3*\text{sdSuitable}_i + \beta_4* X_i + \epsilon_i
-$$
+\end{equation}
+
 The first model only includes absolute latitude, the second model adds the mean and standard deviation of both elevation and land quality within each country, and the remaining models add additional covariates $X_i$.
+
+## Statement of Assumptions
+
+The canonical assumptions of a linear model are that Equation \ref{eq:model1} actually is the data-generation process, and that the error terms $\epsilon_i$ are normal with mean 0, and constant variance $\sigma^2$. Of course, these assumptions are rarely actually true, but fortunately, they can be relaxed slightly.
+
+In the original paper, Michalopolous reported "robust" standard errors for the estimated coefficients, following Eicker-Huber-White's formula. The author used the default behavior of Stata's `robust` command, which includes the HC1 correction, as described in Section 6.4.1 of Peng Ding's lecture notes. Such standard errors relax the homoskedasticity requirement—$\text{Var}\left(\epsilon_i\right) = \sigma^2$—as well as the assumption of normality.
+
+Thus, the only maintained  assumptions are that the linear form in \ref{eq:model1} holds, and that the error terms are independent with mean 0.
 
 ## Replication
 
-As the code and the data files were provided completely by the author, we were able to replicate the results perfectly. Table \ref{tab:tbl1Print} perfectly replicates Table 1 in the original paper, and Table \ref{tab:tbl1Info} displays additional information about each model. Note that all variables, including indicators, were standardized by Michalopolous, so we did so here as well. Unsurprisingly, given the increasing number of features, the observed $R^2$ also increases with each model. In all four models, variation in elevation, and variation in land quality were useful predictors of the log number of languages, as originally hypothesized by the author. Mean precipitation, log of area, and migratory distance from Ethiopia were also significant predictors whenever they were included.
+As the code and the data files were provided completely by the author, we were able to replicate the results perfectly. Table \ref{tab:tbl1Print} perfectly replicates Table 1 in the original paper, and Table \ref{tab:tbl1Info} displays additional information about each model. Note that all variables, including indicators, were standardized by Michalopolous, so we did so here as well. As mentioned above, the reported standard errors are follow the EHW formula, with HC1 correction, so they are generally slightly wider than what one would get from a homoskedastic model. Unsurprisingly, given the increasing number of features, the observed $R^2$ also increases with each model.
 
 ```{r standardize1, echo=F}
 standardize = function(vec) {return ((vec - mean(vec, na.rm = TRUE)) / sd(vec, na.rm = TRUE))}
@@ -396,14 +405,26 @@ tbl1info %>%
                caption = "Information for each model in cross-country analysis.")
 ```
 
+The interpretation of these results is much the same as in the original paper. In all four models, variation in elevation, and variation in land quality were useful predictors of the log number of languages, as originally hypothesized by the author. Naturally, the effect of absolute latitude becomes insignificant once precipitation and temperature are introduced.
 
-### Critique of Assumptions
+The final model introduces variables related to a country's history. The log of population density in 1500 does have a significant effect (at larger thresholds), and the author suggests "conditional on geographic characteristics, contemporary ethnic diversity may have been influenced by a country’s historical levels of development." However, the other features entered here are insignificant, and even the sign of the density coefficient goes against intuition. It seems more natural that countries that were denser in 1500 would have greater ethnolinguistic diversity today, simply due to having more people to split, yet the model suggests the opposite. It could also be that this new feature is simply taking the effect of the 1990 density feature, as the two are very strongly correlated.
 
-`TODO:`
+Another thing to note is that we noticed some inaccuracies with the feature for year of independence. For example, the United States was listed as 1816, as opposed to 1776 or 1783. Other long-existing countries, including many European states were also given this 1816 date. Additionally, former Soviet republics were all (correctly) given a year of 1991, further emphasizing that independence year in general is almost arbitrary—it would have been surprising if it had a significant relationship.
 
-## Robustness Check 
+The author has an interesting interpretation of the distance from sea coefficient:
 
-### Table 2A
+> ... areas that are increasingly isolated from the sea have been experiencing limited population mixing and thus should, on average, display higher ethnolinguistic fractionalization. It should be noted, however, that mean distance from the coast also captures the vulnerability of different areas to both the incidence and the intensity of invasion and colonization. Thus, the coefficient should be interpreted cautiously.
+
+As the coefficient was never much more than one standard error above zero anyway, it is easy to ignore this effect entirely.
+
+
+## Critique of Assumptions
+
+As stated before, this model 
+
+# Robustness Check of Analysis 1
+
+## Table 2A
 
 ```{r model1.1Rob, results='hide', echo=F, eval=T}
 robust1.1 <- glm.nb(numLang ~ absLat + sdSuitable + sdElev + avgElev + avgSuitable + avgPrecip + avgTemp + lnArea 
@@ -463,7 +484,7 @@ summary(robust1.4)
 NOTE: matches!
 
 
-### Table 2B
+## Table 2B
 
 ```{r data_import2b, echo=F, eval=T}
 data2b <- read.dta13("data_raw/Table_3b.dta")
@@ -621,9 +642,10 @@ modelCols = c('lnLang', 'sdElev', 'sdSuitable', 'avgElev', 'avgSuitable',
 
 The model specification for this analysis is almost exactly the same as before, except now each unit $i$ is a virtual country, and "numLang" is really the number of unique ethnic groups:
 
-$$
+\begin{equation}
 \ln\left(\text{numLang}_i\right) = \beta_0 + \beta_1*\text{absLat}_i + \beta_2*\text{sdElev}_i + \beta_3*\text{sdSuitable}_i + \beta_4* X_i + \epsilon_i
-$$
+\end{equation}
+
 Additionally, regressions 2.5, 2.6, and 2.7 are performed only on virtual countries meeting a certain criterion. Regression 2.5 looks only at virtual countries located in the tropics, 2.6 looks at countries not located in the tropics, and 2.7 filters to virtual countries that are located entirely within a real country.
 
 ```{r model2.1, echo=F}
@@ -771,8 +793,23 @@ tbl4format %>% select(10, 2:8) %>%
 ```
 
 
-## Robustness Check
+```{r tbl4Info, results='show', echo=F}
+tbl4info = data.frame(
+  model = 1:7,
+  cont = c("No", "No", "No", "Yes", "Yes", "Yes", "Yes"),
+  nobs = sapply(models, function(model) { nobs(get(model))}),
+  rsq = sapply(models, function(model) {
+    formatC(summary(get(model))$r.squared, digits = 2, format = 'f')
+    }), row.names = NULL
+  )
+tbl4info %>% 
+  knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE,
+               linesep = c(""), 
+               col.names = c('Model', 'Continental Indicators', 'Observations', 'R-Squared'),
+               caption = "Information for each model in virtual country analysis.")
+```
 
+## Robustness Check
 
 ```{r model2.1Rob, results='hide', echo=F, eval=T}
 condition = (data2$totalPop95 >= 3000) & (data2$suitableCells >= 10)
