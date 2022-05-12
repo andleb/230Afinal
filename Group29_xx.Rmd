@@ -153,7 +153,8 @@ The empirical results are obtained separately by three regressions:
   
 * **Adjacent regions**: To account for a potentially high "baseline" effect in some regions, adjacent regions are compared directly, which neutralizes region-specific fixed effects and focuses on the effect of the variables under consideration.
   
-<!-- Finally, in regions that have undergone a major demographic shift in the last 500 years, the explanatory power of the model -->
+<!-- NOTE: I don't think we ever did this in the replication:
+Finally, in regions that have undergone a major demographic shift in the last 500 years, the explanatory power of the model -->
 <!-- is found to be significantly weaker; these regions are controlled for with a dummy variable. -->
 
 ## Exploratory Data Analysis and Summary Table
@@ -275,7 +276,7 @@ The first model only includes absolute latitude, the second model adds the mean 
 
 The canonical assumptions of a linear model are that Equation \ref{eq:model1} actually is the data-generation process, and that the error terms $\epsilon_i$ are normal with mean 0, and constant variance $\sigma^2$. Of course, these assumptions are rarely actually true, but fortunately, they can be relaxed slightly.
 
-In the original paper, Michalopolous reported "robust" standard errors for the estimated coefficients, following Eicker-Huber-White's formula. The author used the default behavior of Stata's `robust` command, which includes the HC1 correction, as described in Section 6.4.1 of Peng Ding's lecture notes. Such standard errors relax the homoskedasticity requirement—$\text{Var}\left(\epsilon_i\right) = \sigma^2$—as well as the assumption of normality.
+In the original paper, Michalopolous reported "robust" standard errors for the estimated coefficients, following Eicker-Huber-White's formula. The author used the default behavior of Stata's `robust` command, which includes the HC1 correction, as described in Section 6.4.1 of Peng Ding's lecture notes [@ding_linear_2022]. Such standard errors relax the homoskedasticity requirement—$\text{Var}\left(\epsilon_i\right) = \sigma^2$—as well as the assumption of normality.
 
 Thus, the only maintained  assumptions are that the linear form in \ref{eq:model1} holds, and that the error terms are independent with mean 0.
 
@@ -417,16 +418,23 @@ tbl1info %>%
 ```
 
 The interpretation of these results is much the same as in the original paper. In all four models, variation in elevation, and variation in land quality were useful predictors of the log number of languages, as originally hypothesized by the author.
-
 The effects of the geographic variables are also noteworthy. Naturally, the effect of absolute latitude becomes insignificant once precipitation and temperature are introduced, as those two are highly correlated with distance from the equator. Between models 1.1 and 1.2, and also 1.2 and 1.3, the observed $R^2$ makes sizeable jumps, indicating that these geographic features are very useful in explaining linguistic diversity. About the distance distance from sea coefficient, the author has this intruiging interpretation:
 
 > ... areas that are increasingly isolated from the sea have been experiencing limited population mixing and thus should, on average, display higher ethnolinguistic fractionalization. It should be noted, however, that mean distance from the coast also captures the vulnerability of different areas to both the incidence and the intensity of invasion and colonization. Thus, the coefficient should be interpreted cautiously.
 
 As the coefficient was never much more than one standard error above zero anyway, it is easy to ignore this effect entirely.
 
-The final model introduces variables related to a country's history. The log of population density in 1500 does have a significant effect (at larger thresholds), and the author suggests "conditional on geographic characteristics, contemporary ethnic diversity may have been influenced by a country’s historical levels of development." However, the other features entered here are insignificant, and even the sign of the density coefficient goes against intuition. It seems more natural that countries that were denser in 1500 would have greater ethnolinguistic diversity today, simply due to having more people to split, yet the model suggests the opposite. It could also be that this new feature is simply taking the effect of the 1990 density feature, as the two are very strongly correlated. Therefore, we consider it unlikely that such "historical levels of development" have much effect on modern diversity.
+The final model introduces variables related to a country's history. The log of population density in 1500 does have a significant effect (at larger thresholds), and the author suggests "conditional on geographic characteristics, contemporary ethnic diversity may have been influenced by a country’s historical levels of development." 
+
+<!-- # NOTE: I actually don't agree with this conclusion - density 1500 is proxy for early transition to "modernity' (Belgium, North Italy etc) which drastically centralized ethnic identities. For example, the majority of France didn't understand "french" until the revolution. -->
+
+However, the other features entered here are insignificant, and even the sign of the density coefficient goes against intuition. It seems more natural that countries that were denser in 1500 would have greater ethnolinguistic diversity today, simply due to having more people to split, yet the model suggests the opposite. It could also be that this new feature is simply taking the effect of the 1990 density feature, as the two are very strongly correlated. Therefore, we consider it unlikely that such "historical levels of development" have much effect on modern diversity.
 
 Another thing to note is that we noticed some inaccuracies with the provided years of independence. For example, the United States was listed as 1816, as opposed to 1776 or 1783. Other long-existing countries, such as Portugal and Denmark, were also given this 1816 value. Additionally, former Soviet republics were all (correctly) given a year of 1991, further emphasizing that independence year in general is almost arbitrary—it would have been surprising if it had a significant relationship with the outcome.
+
+Finally, the author includes five dummy variables in the last regression that map to the continent the country is located
+in. This is done in an attempt to better model both geographic (the author mentions Africa as being less geographically
+varying as a whole), as well as continent-wide historic effects.
 
 ## Critique of Assumptions
 
@@ -451,9 +459,35 @@ abline(0, 0)
 lines(y, y * residModel$coefficients['y'], col = 'red', type = 'l')
 ```
 
+<!-- \newpage  -->
+
 # Robustness Check of Analysis 1
 
 ## Table 2A
+
+Table \ref{tab:tbl2aPrint} recreates the first series of robustness check for the model described above. Since the dependent
+variable is a count, it makes sense to employ a regression model that models that fact directly. The author argues for the 
+*negative binomial* generative model due to the supposed *overdispersion* in the number of languages. The results are
+presented in the first column. 
+
+The second robustness check substitutes the measure of variance - standard deviation - of the two most crucial covariates
+(elevation and land quality) with a bit more "robust measure" - "dispersion", which the author defines as the range between
+the minimum and maximum values.
+
+The third and fourth columns attempt to substitute the variation in land quality with alternative metrics: the means and
+variations in climatic and soil suitability, respectively. 
+
+All the regressions in this table include the continental fixed effects mentioned previously. 
+The regressions with alternative covariates confirm that the variation in land quality (or it's counterpart) is the most
+impactful factor in determining ethnolinguistic diversity within a country. Furthermore, our replication finds the published
+results to hold exactly.
+
+Table \ref{tab:tbl2aInfo} summarizes the control groups used in the robustness check regressions. Interestingly,
+the finding are robust to the substitution of the most important covariates with alternative measures, since the $R^2$ 
+coefficient matches that of the last regression in the original analysis, and is completely stable across all comparable
+models using alternative covariates.
+
+
 
 ```{r model1.1Rob, results='hide', echo=F, eval=T}
 robust1.1 <- glm.nb(numLang ~ absLat + sdSuitable + sdElev + avgElev + avgSuitable + avgPrecip +
@@ -465,8 +499,6 @@ robust1.1 <- glm.nb(numLang ~ absLat + sdSuitable + sdElev + avgElev + avgSuitab
 ```{r model1.1RobTable, results='show', echo=F, eval=F}
 summary(robust1.1)
 ```
-NOTE: Matches!
-
 
 ```{r model1.2Rob, results='hide', echo=F, eval=T}
 robust1.2 <- lm(lnLang ~ absLat + dispElev + dispSuitable + avgElev + avgSuitable + avgPrecip +
@@ -479,7 +511,6 @@ robust1.2 <- lm(lnLang ~ absLat + dispElev + dispSuitable + avgElev + avgSuitabl
 ```{r model1.2RobTable, results='show', echo=F, eval=F}
 summary(robust1.2)
 ```
-NOTE: matches or exceeds in significance, as well
 
 ```{r model1.3Rob, results='hide', echo=F, eval=T}
 robust1.3 <- lm(lnLang ~ absLat + sdElev + sdClimate + avgElev + climate + avgPrecip +  avgTemp +  
@@ -492,8 +523,6 @@ robust1.3 <- lm(lnLang ~ absLat + sdElev + sdClimate + avgElev + climate + avgPr
 ```{r model1.3RobTable, results='show', echo=F, eval=F}
 summary(robust1.3)
 ```
-
-NOTE: matches!
 
 
 ```{r model1.4Rob, results='hide', echo=F, eval=T}
@@ -510,7 +539,6 @@ robust1.4 <- lm(lnLang ~ absLat + sdElev + sdSoil + avgElev + soil + avgPrecip +
 ```{r model1.4RobTable, results='show', echo=F, eval=F}
 summary(robust1.4)
 ```
-NOTE: matches!
 
 
 ```{r tbl2a, results='hide', echo=F}
@@ -550,7 +578,6 @@ tbl2a <- gdata::interleave(coeffDf, sesDf)
 ```
 
 `TODO: figure out better table placements`
-\newpage
 
 ```{r tbl2aPrint, results='show', echo=F}
 # ensure a hard copy
@@ -615,7 +642,7 @@ tbl2ainfo %>%
                caption = "Information for each model in Table 2A: cross-country robustness check")
 ```
 
-\newpage
+
 
 ## Table 2B
 
@@ -632,7 +659,22 @@ data2bStd <- data2b %>% mutate(across(! all_of(notStdized) , standardize))
 
 ```
 
-`TODO: write up a bit about the datasets used here`
+Table \ref{tab:tbl2bPrint} introduces a new dependent variable in place of the (logarithm) of the languages spoken -
+*ELF - Etnolinguistic fractionalization*.  This is taken from an updated version of an old Soviet work - *Atlas Narodov
+Mira* (Atlas of the World's Nations). 
+
+In columns 4-7, the same metric is reconstructed from the *Ethnologue* dataset using splitting rules of increasing fineness
+for constructed language trees.
+
+It also substitutes the measures of land suitability discussed above with their climatic counterpart, used in the previous
+robustness check.
+
+
+The replication again obtains complete agreement in the values, confidence intervals, and the $R^2$ coefficient with the 
+published results.
+
+The noticeably small values of $R^2$ across the models indicate that ...
+
 
 
 ```{r model1.2.1, results='hide', echo=F, eval=T}
@@ -768,7 +810,6 @@ tbl2b <- gdata::interleave(coeffDf, sesDf)
 ```
 
 `TODO: figure out better table placements`
-\newpage
 
 ```{r tbl2bPrint, results='show', echo=F, eval=T}
 # ensure a hard copy
@@ -1463,6 +1504,19 @@ tbl5binfo %>%
 
 
 # Conclusion
+
+Our replication seems to give credence to the hypothesis put forth in the original paper:  
+
+> The empirical analysis conducted ... establishes that geographic variability, captured by variation in regional land quality
+and elevation, is a fundamental determinant of contemporary linguistic diversity. The findings are consistent with the proposed hypothesis
+that differences in land endowments gave rise to location-specific human capital, leading to the formation of localized ethnicities.
+
+A representative example of the formation of separate ethnicities being induced by a high variance in the land quality and elevation
+is that of the latter two allowing for two separate populations in a relatively small geographic area to practice drastically
+different modes of subsistence. The (usually) low-lying, higher quality land is conductive to intensive farming, while 
+the adjacent lower quality, hillier terrain permits only pastoralism. With time, these two populations develop separate customs and languages,
+leading to a separate sense of ethnic belonging.
+
 
 
 # References
