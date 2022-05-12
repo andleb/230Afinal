@@ -295,7 +295,6 @@ modelCols = c('entryYear', 'avgTemp', 'avgPrecip', 'seaDist', 'avgElev',
 # for (col in modelCols) {
 #  data[,col] = standardize(data[,col])
 # }
-# NOTE: Easier to say what we're not standardizing; also for the robustness checks we need to keep a non-standardized copy
 dataStd = data %>% mutate(across(!countryName & !countryCode , standardize))
 ```
 
@@ -332,17 +331,20 @@ model1.5 = lm(lnLang ~ sdElev + sdSuitable + avgElev + avgSuitable + absLat
 
 ```{r tbl1, results='hide', echo=F}
 models = paste0("model1.", 1:5)
-coefs = sapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 1]}) %>% 
+coefs = sapply(models, function(model) {coeftest(get(model),
+                                                 vcov = vcovHC(get(model), "HC1"))[, 1]}) %>% 
   unlist() %>% data.frame()
 coefs$model = substr(row.names(coefs), 1, 8)
 coefs$column = substr(row.names(coefs), 10, nchar(row.names(coefs)))
 
-ses = sapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 2]}) %>% 
+ses = sapply(models, function(model) {coeftest(get(model),
+                                               vcov = vcovHC(get(model), "HC1"))[, 2]}) %>% 
   unlist() %>% data.frame()
 ses$model = substr(row.names(ses), 1, 8)
 ses$column = substr(row.names(ses), 10, nchar(row.names(ses)))
 
-pvals = sapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 4]}) %>% 
+pvals = sapply(models, function(model) {coeftest(get(model),
+                                                 vcov = vcovHC(get(model), "HC1"))[, 4]}) %>% 
   unlist() %>% data.frame()
 pvals$model = substr(row.names(pvals), 1, 8)
 pvals$column = substr(row.names(pvals), 10, nchar(row.names(pvals)))
@@ -367,12 +369,16 @@ for (model in models) {
   estimRows = !is.na(tbl1[, model]) & (tbl1$stat == 'Estimate')
   seRows = !is.na(tbl1[, model]) & (tbl1$stat == 'SE')
 
-  tbl1format[estimRows, model] = sprintf(fmt = "%.3f", tbl1[estimRows, model] %>% unlist() %>% as.numeric())
-  tbl1format[seRows, model] = paste0("(", sprintf(fmt = "%.3f", tbl1[seRows, model] %>% unlist() %>% as.numeric()), ")")
+  tbl1format[estimRows, model] = sprintf(fmt = "%.3f",
+                                         tbl1[estimRows, model] %>% unlist() %>% as.numeric())
+  tbl1format[seRows, model] = paste0("(", sprintf(fmt = "%.3f",
+                                                  tbl1[seRows, model] %>%
+                                                    unlist() %>% as.numeric()), ")")
   
   significant = rep(pvalsPivoted[, model] < .01, each = 2)
   significant[is.na(significant)] = FALSE
-  tbl1format[estimRows, model] = cell_spec(tbl1format[estimRows, model], italic = significant[estimRows])
+  tbl1format[estimRows, model] = cell_spec(tbl1format[estimRows, model],
+                                           italic = significant[estimRows])
   tbl1format[seRows, model] = cell_spec(tbl1format[seRows, model], italic = significant[seRows])
 }
 
@@ -390,7 +396,8 @@ col.names = c("Variable", paste0("(", 1:5, ")"))
 tbl1format %>% select(8, 2:6) %>%
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, linesep = c("", "\\addlinespace"),
              col.names = col.names, align = "r", escape = F,
-             caption = 'Main specification for the cross-country analysis. Italics indicate significance at the 1\\% level.') %>%
+             caption = cat('Main specification for the cross-country analysis.",
+             Italics indicate significance at the 1\\% level.')) %>%
   row_spec(seq(2, 28, 2), font_size = 8)
 ```
 
@@ -405,7 +412,8 @@ tbl1info = data.frame(
   )
 tbl1info %>% 
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE,
-               col.names = c('Model', 'Continental Indicators', 'Observations', '$R^2$'), escape = F,
+               col.names = c('Model', 'Continental Indicators', 'Observations', '$R^2$'),
+               escape = F,
                caption = "Information for each model in cross-country analysis.")
 ```
 
@@ -449,9 +457,9 @@ lines(y, y * residModel$coefficients['y'], col = 'red', type = 'l')
 ## Table 2A
 
 ```{r model1.1Rob, results='hide', echo=F, eval=T}
-robust1.1 <- glm.nb(numLang ~ absLat + sdSuitable + sdElev + avgElev + avgSuitable + avgPrecip + avgTemp + lnArea 
-                    + seaDist + migrationDist + lnPopDens1995 + lnPopDens1500 + entryYear + agriTran + 
-                    africa + europe + americas + asiaPac
+robust1.1 <- glm.nb(numLang ~ absLat + sdSuitable + sdElev + avgElev + avgSuitable + avgPrecip +
+                    avgTemp + lnArea + seaDist + migrationDist + lnPopDens1995 + lnPopDens1500 +
+                    entryYear + agriTran + africa + europe + americas + asiaPac
                     , data, na.action = na.exclude)
 ```
 
@@ -462,9 +470,9 @@ NOTE: Matches!
 
 
 ```{r model1.2Rob, results='hide', echo=F, eval=T}
-robust1.2 <- lm(lnLang ~ absLat + dispElev + dispSuitable + avgElev + avgSuitable + avgPrecip +  avgTemp +  
-                lnArea +  seaDist + migrationDist +  lnPopDens1995 + lnPopDens1500 + entryYear + agriTran + 
-                africa + europe + americas + asiaPac,
+robust1.2 <- lm(lnLang ~ absLat + dispElev + dispSuitable + avgElev + avgSuitable + avgPrecip +
+                avgTemp +  lnArea +  seaDist + migrationDist +  lnPopDens1995 + lnPopDens1500 +
+                entryYear + agriTran + africa + europe + americas + asiaPac,
                 data, na.action = na.exclude)
                     
 ```
@@ -476,8 +484,8 @@ NOTE: matches or exceeds in significance, as well
 
 ```{r model1.3Rob, results='hide', echo=F, eval=T}
 robust1.3 <- lm(lnLang ~ absLat + sdElev + sdClimate + avgElev + climate + avgPrecip +  avgTemp +  
-                lnArea +  seaDist + migrationDist +  lnPopDens1995 +  lnPopDens1500 + entryYear + agriTran + 
-                africa + europe + americas + asiaPac,
+                lnArea +  seaDist + migrationDist +  lnPopDens1995 +  lnPopDens1500 + entryYear +
+                agriTran + africa + europe + americas + asiaPac,
                 data, na.action = na.exclude)
                     
 ```
@@ -494,8 +502,8 @@ NOTE: matches!
 data1.4 <- data[(data$suitableCells > 9) & (data$lnArea > -10), ]
 
 robust1.4 <- lm(lnLang ~ absLat + sdElev + sdSoil + avgElev + soil + avgPrecip +  avgTemp +  
-                lnArea +  seaDist + migrationDist +  lnPopDens1995 +  lnPopDens1500 + entryYear + agriTran + 
-                africa + europe + americas + asiaPac,
+                lnArea +  seaDist + migrationDist +  lnPopDens1995 +  lnPopDens1500 + entryYear +
+                agriTran + africa + europe + americas + asiaPac,
                 data1.4, na.action = na.exclude)
                     
 ```
@@ -508,7 +516,8 @@ NOTE: matches!
 
 ```{r tbl2a, results='hide', echo=F}
 models <- paste0("robust1.", 1:4)
-coeffs <- lapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 1]})
+coeffs <- lapply(models, function(model) {coeftest(get(model),
+                                                   vcov = vcovHC(get(model), "HC1"))[, 1]})
 names(coeffs) <- models
 
 vars <- unique(unlist(lapply(coeffs, names)))
@@ -516,12 +525,14 @@ vars <- unique(unlist(lapply(coeffs, names)))
 coeffDf <- data.frame(row.names = vars)
 for(model in models) coeffDf[names(coeffs[[model]]), model] <- coeffs[[model]]
 
-ses <- lapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 2]})
+ses <- lapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model),
+                                                                          "HC1"))[, 2]})
 names(ses) <- models
 sesDf <- data.frame(row.names = vars)
 for(model in models) sesDf[names(ses[[model]]), model] <- ses[[model]]
 
-pvals <- lapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 4]})
+pvals <- lapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model),
+                                                                            "HC1"))[, 4]})
 names(pvals) <- models
 pvalsDf <- data.frame(row.names = vars)
 for(model in models) pvalsDf[names(pvals[[model]]), model] <- pvals[[model]]
@@ -550,7 +561,8 @@ for (model in models) {
   estimRows <- !is.na(tbl2aformat[, model]) & (tbl2aformat$stat == 'Estimate')
   seRows <- !is.na(tbl2aformat[, model]) & (tbl2aformat$stat == 'SE')
 
-  tbl2aformat[estimRows, model] <- sprintf(fmt = "%.3f", tbl2aformat[estimRows, model] %>% unlist() %>% as.numeric())
+  tbl2aformat[estimRows, model] <- sprintf(fmt = "%.3f", tbl2aformat[estimRows, model]
+                                           %>% unlist() %>% as.numeric())
   tbl2aformat[seRows, model] <- paste0("(", sprintf(fmt = "%.3f", tbl2aformat[seRows, model]
                                              %>% unlist() 
                                              %>% as.numeric()), ")")
@@ -558,8 +570,10 @@ for (model in models) {
   significant <- rep(pvalsDf[, model] < .01, each = 2)
   significant[is.na(significant)] <- FALSE
   
-  tbl2aformat[estimRows, model] <- cell_spec(tbl2aformat[estimRows, model], italic = significant[estimRows])
-  tbl2aformat[seRows, model] <- cell_spec(tbl2aformat[seRows, model], italic = significant[seRows])
+  tbl2aformat[estimRows, model] <- cell_spec(tbl2aformat[estimRows, model],
+                                             italic = significant[estimRows])
+  tbl2aformat[seRows, model] <- cell_spec(tbl2aformat[seRows, model],
+                                          italic = significant[seRows])
 }
 
 tbl2aformat$name <- c('Variation in elevation', NA, 'Variation in land quality', NA,
@@ -575,7 +589,8 @@ tbl2aformat %>%
              col.names = col.names, 
              row.names = F,
              align = "r", escape = F,
-             caption = 'Table 2A—Robustness Checks for the Cross-Country Analysis. Italics indicate significance at the 1\\% level.')  %>%
+             caption = cat('Table 2A—Robustness Checks for the Cross-Country Analysis.,
+                           "Italics indicate significance at the 1\\% level.'))  %>%
   row_spec(seq(2, nrow(tbl2aformat), 2), font_size = 8)
 
 ```
@@ -596,7 +611,8 @@ tbl2ainfo <-  data.frame(
 
 tbl2ainfo %>% 
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE,
-               col.names = c('Model', 'Continental Indicators', 'Observations', '$R^2$', "Log pseudolikelihood"),
+               col.names = c('Model', 'Continental Indicators', 'Observations', '$R^2$',
+                             "Log pseudolikelihood"),
                escape = F,
                caption = "Information for each model in Table 2A: cross-country robustness check")
 ```
@@ -646,8 +662,8 @@ OK
 
 ```{r model1.2.3, results='hide', echo=F, eval=T}
 robust1.2.3 <- lm(elf ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit + 
-                  precav + tempav + lnareakm2 + distc + migdist + lnpop95 + lpd1500 + yrentry + agritran + 
-                  africa + europe + americas + reg_eap
+                  precav + tempav + lnareakm2 + distc + migdist + lnpop95 + lpd1500 + yrentry +
+                  agritran + africa + europe + americas + reg_eap
                   , data2bStd, na.action = na.exclude)
 
 ```
@@ -659,8 +675,8 @@ OK
 
 ```{r model1.2.4, results='hide', echo=F, eval=T}
 robust1.2.4 <- lm(elf3 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit + 
-                  precav + tempav + lnareakm2 + distc + migdist + lnpop95 + lpd1500 + yrentry + agritran + 
-                  africa + europe + americas + reg_eap
+                  precav + tempav + lnareakm2 + distc + migdist + lnpop95 + lpd1500 + yrentry +
+                  agritran + africa + europe + americas + reg_eap
                   , data2bStd, na.action = na.exclude)
 
 ```
@@ -673,8 +689,8 @@ OK
 
 ```{r model1.2.5, results='hide', echo=F, eval=T}
 robust1.2.5 <- lm(elf5 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit + 
-                  precav + tempav + lnareakm2 + distc + migdist + lnpop95 + lpd1500 + yrentry + agritran + 
-                  africa + europe + americas + reg_eap
+                  precav + tempav + lnareakm2 + distc + migdist + lnpop95 + lpd1500 + yrentry +
+                  agritran + africa + europe + americas + reg_eap
                   , data2bStd, na.action = na.exclude)
 
 ```
@@ -688,8 +704,8 @@ OK
 
 ```{r model1.2.6, results='hide', echo=F, eval=T}
 robust1.2.6 <- lm(elf7 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit + 
-                  precav + tempav + lnareakm2 + distc + migdist + lnpop95 + lpd1500 + yrentry + agritran + 
-                  africa + europe + americas + reg_eap
+                  precav + tempav + lnareakm2 + distc + migdist + lnpop95 + lpd1500 + yrentry +
+                  agritran + africa + europe + americas + reg_eap
                   , data2bStd, na.action = na.exclude)
 
 ```
@@ -703,8 +719,8 @@ OK
 
 ```{r model1.2.7, results='hide', echo=F, eval=T}
 robust1.2.7 <- lm(elf9 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit + 
-                  precav + tempav + lnareakm2 + distc + migdist + lnpop95 + lpd1500 + yrentry + agritran + 
-                  africa + europe + americas + reg_eap
+                  precav + tempav + lnareakm2 + distc + migdist + lnpop95 + lpd1500 + yrentry +
+                  agritran + africa + europe + americas + reg_eap
                   , data2bStd, na.action = na.exclude)
 
 ```
@@ -718,7 +734,8 @@ OK
 
 ```{r tbl2b, results='hide', echo=F, eval=T}
 models <- paste0("robust1.2.", 1:7)
-coeffs <- lapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 1]})
+coeffs <- lapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model),
+                                                                             "HC1"))[, 1]})
 names(coeffs) <- models
 
 vars <- unique(unlist(lapply(coeffs, names)))
@@ -726,12 +743,14 @@ vars <- unique(unlist(lapply(coeffs, names)))
 coeffDf <- data.frame(row.names = vars)
 for(model in models) coeffDf[names(coeffs[[model]]), model] <- coeffs[[model]]
 
-ses <- lapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 2]})
+ses <- lapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model),
+                                                                          "HC1"))[, 2]})
 names(ses) <- models
 sesDf <- data.frame(row.names = vars)
 for(model in models) sesDf[names(ses[[model]]), model] <- ses[[model]]
 
-pvals <- lapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 4]})
+pvals <- lapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model),
+                                                                            "HC1"))[, 4]})
 names(pvals) <- models
 pvalsDf <- data.frame(row.names = vars)
 for(model in models) pvalsDf[names(pvals[[model]]), model] <- pvals[[model]]
@@ -761,7 +780,8 @@ for (model in models) {
   estimRows <- !is.na(tbl2bformat[, model]) & (tbl2bformat$stat == 'Estimate')
   seRows <- !is.na(tbl2bformat[, model]) & (tbl2bformat$stat == 'SE')
 
-  tbl2bformat[estimRows, model] <- sprintf(fmt = "%.3f", tbl2bformat[estimRows, model] %>% unlist() %>% as.numeric())
+  tbl2bformat[estimRows, model] <- sprintf(fmt = "%.3f", tbl2bformat[estimRows, model]
+                                           %>% unlist() %>% as.numeric())
   tbl2bformat[seRows, model] <- paste0("(", sprintf(fmt = "%.3f", tbl2bformat[seRows, model]
                                              %>% unlist() 
                                              %>% as.numeric()), ")")
@@ -769,8 +789,10 @@ for (model in models) {
   significant <- rep(pvalsDf[, model] < .01, each = 2)
   significant[is.na(significant)] <- FALSE
   
-  tbl2bformat[estimRows, model] <- cell_spec(tbl2bformat[estimRows, model], italic = significant[estimRows])
-  tbl2bformat[seRows, model] <- cell_spec(tbl2bformat[seRows, model], italic = significant[seRows])
+  tbl2bformat[estimRows, model] <- cell_spec(tbl2bformat[estimRows, model],
+                                             italic = significant[estimRows])
+  tbl2bformat[seRows, model] <- cell_spec(tbl2bformat[seRows, model],
+                                          italic = significant[seRows])
 }
 
 tbl2bformat$name <- c('Variation in elevation', NA, 'Variation in climatic suitability', NA,
@@ -790,7 +812,8 @@ tbl2bformat %>%
              col.names = col.names, 
              row.names = F,
              align = "r", escape = F,
-             caption = 'Table 2B—Linguistic Fractionalization across Countries. Italics indicate significance at the 1\\% level.')  %>%
+             caption = cat('Table 2B—Linguistic Fractionalization across Countries.",
+                           "Italics indicate significance at the 1\\% level.'))  %>%
   row_spec(seq(2, nrow(tbl2bformat), 2), font_size = 8)
 
 ```
@@ -811,7 +834,8 @@ tbl2binfo %>%
                col.names = c('Model', 'Continental Indicators', 'Observations', '$R^2$'),
                escape = F,
                row.names = F,
-               caption = "Information for each model in Table 2B: Linguistic Fractionalization across Countries")
+               caption = cat("Information for each model in Table 2B:",
+                             "Linguistic Fractionalization across Countries"))
 ```
 
 \newpage
@@ -962,17 +986,23 @@ pvals = c(pvals, 0, model2.7$p.value)
 models = paste0("model2.", 1:7)
 
 names(coefs)[names(coefs) == ""] = "(Intercept)"
-coefs = data.frame(coefs, row.names = paste0("model2.", cumsum(names(coefs) %in% c("(Intercept)", "")), ".", names(coefs)))
+coefs = data.frame(coefs, row.names = paste0("model2.",
+                                             cumsum(names(coefs) %in% c("(Intercept)", "")),
+                                             ".", names(coefs)))
 coefs$model = substr(row.names(coefs), 1, 8)
 coefs$column = substr(row.names(coefs), 10, nchar(row.names(coefs)) - 1)
 
 names(ses)[names(ses) == ""] = "(Intercept)"
-ses = data.frame(ses, row.names = paste0("model2.", cumsum(names(ses) %in% c("(Intercept)", "")), ".", names(ses)))
+ses = data.frame(ses, row.names = paste0("model2.",
+                                         cumsum(names(ses) %in% c("(Intercept)", "")),
+                                         ".", names(ses)))
 ses$model = substr(row.names(ses), 1, 8)
 ses$column = substr(row.names(ses), 10, nchar(row.names(ses)) - 1)
 
 names(pvals)[names(pvals) == ""] = "(Intercept)"
-pvals = data.frame(pvals, row.names = paste0("model2.", cumsum(names(pvals) %in% c("(Intercept)", "")), ".", names(pvals)))
+pvals = data.frame(pvals, row.names = paste0("model2.",
+                                             cumsum(names(pvals) %in% c("(Intercept)", "")),
+                                             ".", names(pvals)))
 pvals$model = substr(row.names(pvals), 1, 8)
 pvals$column = substr(row.names(pvals), 10, nchar(row.names(pvals)) - 1)
 
@@ -996,12 +1026,15 @@ for (model in models) {
   estimRows = !is.na(tbl4[, model]) & (tbl4$stat == 'Estimate')
   seRows = !is.na(tbl4[, model]) & (tbl4$stat == 'SE')
 
-  tbl4format[estimRows, model] = sprintf(fmt = "%.3f", tbl4[estimRows, model] %>% unlist() %>% as.numeric())
-  tbl4format[seRows, model] = paste0("(", sprintf(fmt = "%.3f", tbl4[seRows, model] %>% unlist() %>% as.numeric()), ")")
+  tbl4format[estimRows, model] = sprintf(fmt = "%.3f", tbl4[estimRows, model] %>%
+                                           unlist() %>% as.numeric())
+  tbl4format[seRows, model] = paste0("(", sprintf(fmt = "%.3f", tbl4[seRows, model] %>%
+                                                    unlist() %>% as.numeric()), ")")
   
   significant = rep(pvalsPivoted[, model] < .01, each = 2)
   significant[is.na(significant)] = FALSE
-  tbl4format[estimRows, model] = cell_spec(tbl4format[estimRows, model], italic = significant[estimRows])
+  tbl4format[estimRows, model] = cell_spec(tbl4format[estimRows, model],
+                                           italic = significant[estimRows])
   tbl4format[seRows, model] = cell_spec(tbl4format[seRows, model], italic = significant[seRows])
 }
 
@@ -1011,14 +1044,16 @@ tbl4format$name = c('Variation in elevation', NA, 'Variation in land quality', N
                            'Mean temperature', NA, 'Ln(Area)', NA,
                            'Distance from the sea', NA, 'Water area', NA,
                          'Within-country indicator', NA, 'Number of countries', NA,
-                         'Migratory distance from Ethiopia', NA, 'Ln(Population density in 1995)', NA)
+                         'Migratory distance from Ethiopia', NA, 'Ln(Population density in 1995)',
+                    NA)
 
 col.names = c("Variable", paste0("(", 1:7, ")"))
 
 tbl4format %>% select(10, 2:8) %>%
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, linesep = c("", "\\addlinespace"),
              col.names = col.names, align = "r", escape = F,
-             caption = 'Main specification for the virtual country analysis. Italics indicate significance at the 1\\% level.') %>%
+             caption = cat('Main specification for the virtual country analysis.",
+                           "Italics indicate significance at the 1\\% level.')) %>%
   row_spec(seq(2, 28, 2), font_size = 8)
 ```
 
@@ -1037,7 +1072,9 @@ tbl4info = data.frame(
 tbl4info %>% 
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE,
                linesep = c(""), align = 'r',
-               col.names = c('Model', 'Country Indicators', 'Observations', 'WLMS $R^2$', 'GREG $R^2$'), escape = F,
+               col.names = c('Model', 'Country Indicators',
+                             'Observations', 'WLMS $R^2$', 'GREG $R^2$'),
+               escape = F,
                caption = "Information for each model in virtual country analysis.")
 ```
 
@@ -1067,20 +1104,23 @@ However, there are a few noteworthy inconsistencies. One is that distance from t
 ## Robustness Check 1
 
 ```{r model2.1.1Rob, results='hide', echo=F, eval=T}
-# NOTE: seems unstandardized
-robust2.1.1glm <-  glm.nb(numLang ~ absLat + sdElev + sdSuitable +  avgElev + avgSuitable +  avgPrecip +  avgTemp +  lnArea +  seaDist + 
+# NOTE: Need glm for the theta, and geem for the robust se
+robust2.1.1glm <-  glm.nb(numLang ~ absLat + sdElev + sdSuitable +  avgElev + avgSuitable +
+                          avgPrecip +  avgTemp +  lnArea +  seaDist + 
                        waterArea +  withinCountry +  numCountry + migrationDist + lnPopDens95
                        + factor(countryCode),
                        data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 3000)),
                        na.action = na.exclude)
 
-robust2.1.1 <- geem(formula = numLang ~ absLat + sdElev + sdSuitable +  avgElev + avgSuitable +  avgPrecip +
-                                  avgTemp +  lnArea +  seaDist + waterArea +  withinCountry +  numCountry + 
-                                  migrationDist + lnPopDens95,
+robust2.1.1 <- geem(formula = numLang ~ absLat + sdElev + sdSuitable +  avgElev + avgSuitable +
+                              avgPrecip +avgTemp +  lnArea +  seaDist + waterArea +
+                              withinCountry +  numCountry + migrationDist + lnPopDens95,
                         id = countryCode,
                         nodummy = TRUE,
-                        data = data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 3000)),
-                        family = MASS::negative.binomial(theta = robust2.1.1glm$theta, link = 'log'),
+                        data = data2 %>% filter((data2$suitableCells >= 10) &
+                                                  (data2$totalPop95 >= 3000)),
+                        family = MASS::negative.binomial(theta = robust2.1.1glm$theta,
+                                                         link = 'log'),
                         sandwich = TRUE,
                         corstr = "independence",
                         scale.fix = TRUE,
@@ -1094,8 +1134,9 @@ summary(robust2.1.1)
 
 
 ```{r model2.1.2Rob, results='hide', echo=F, eval=T}
-robust2.1.2 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +  avgPrecip + avgTemp +  lnArea + 
-                         seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
+robust2.1.2 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +
+                         avgPrecip + avgTemp +  lnArea + seaDist + waterArea + 
+                         withinCountry +  numCountry +  migrationDist +  lnPopDens95,
                          data2 %>% filter((data2$suitableCells >= 10)),
                          fixed_effects = ~countryCode,
                          se_type = "stata")
@@ -1108,9 +1149,11 @@ summary(robust2.1.2)
 OK
 
 ```{r model2.1.3Rob, results='hide', echo=F, eval=T}
-robust2.1.3 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +  avgPrecip + avgTemp +  lnArea + 
-                         seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
-                         data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 50000)),
+robust2.1.3 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +
+                         avgPrecip + avgTemp +  lnArea + seaDist + waterArea +
+                         withinCountry +  numCountry +  migrationDist +  lnPopDens95,
+                         data2 %>% filter((data2$suitableCells >= 10) &
+                                            (data2$totalPop95 >= 50000)),
                          fixed_effects = ~countryCode,
                          se_type = "stata")
 ```
@@ -1173,7 +1216,8 @@ for (model in models) {
   estimRows <- !is.na(tbl5aformat[, model]) & (tbl5aformat$stat == 'Estimate')
   seRows <- !is.na(tbl5aformat[, model]) & (tbl5aformat$stat == 'SE')
 
-  tbl5aformat[estimRows, model] <- sprintf(fmt = "%.3f", tbl5aformat[estimRows, model] %>% unlist() %>% as.numeric())
+  tbl5aformat[estimRows, model] <- sprintf(fmt = "%.3f", tbl5aformat[estimRows, model] %>%
+                                             unlist() %>% as.numeric())
   tbl5aformat[seRows, model] <- paste0("(", sprintf(fmt = "%.3f", tbl5aformat[seRows, model]
                                              %>% unlist() 
                                              %>% as.numeric()), ")")
@@ -1181,8 +1225,10 @@ for (model in models) {
   significant <- rep(pvalsDf[, model] < .01, each = 2)
   significant[is.na(significant)] <- FALSE
   
-  tbl5aformat[estimRows, model] <- cell_spec(tbl5aformat[estimRows, model], italic = significant[estimRows])
-  tbl5aformat[seRows, model] <- cell_spec(tbl5aformat[seRows, model], italic = significant[seRows])
+  tbl5aformat[estimRows, model] <- cell_spec(tbl5aformat[estimRows, model],
+                                             italic = significant[estimRows])
+  tbl5aformat[seRows, model] <- cell_spec(tbl5aformat[seRows, model],
+                                          italic = significant[seRows])
 }
 
 tbl5aformat$name <- c('Variation in elevation', NA, 'Variation in land quality', NA)
@@ -1195,7 +1241,8 @@ tbl5aformat %>%
              col.names = col.names, 
              row.names = F,
              align = "r", escape = F,
-             caption = "Table 5A—Robustness Checks for the Virtual Country Analysis. Italics indicate significance at the 1\\% level.")  %>%
+             caption = cat("Table 5A—Robustness Checks for the Virtual Country Analysis.", 
+                           "Italics indicate significance at the 1\\% level."))  %>%
   row_spec(seq(2, nrow(tbl5aformat), 2), font_size = 8)
 
 ```
@@ -1216,7 +1263,8 @@ tbl5ainfo <- data.frame(
 
 tbl5ainfo %>% 
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE,
-               col.names = c('Model', 'Country Indicators', 'Observations', '$R^2$', "Log pseudolikelihood"),
+               col.names = c('Model', 'Country Indicators', 'Observations', '$R^2$',
+                             "Log pseudolikelihood"),
                escape = F,
                caption = "Information for each model in Table 5A: cross-country robustness check")
 ```
@@ -1230,9 +1278,11 @@ tbl5ainfo %>%
 
 
 ```{r model2.2.1Rob, results='hide', echo=F, eval=T}
-robust2.2.1 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +  avgPrecip + avgTemp +  lnArea + 
-                         seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
-                         data2 %>% filter((data2$suitableCells == 25) & (data2$totalPop95 >= 3000)),
+robust2.2.1 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +
+                         avgPrecip + avgTemp +  lnArea + seaDist + waterArea +
+                         withinCountry +  numCountry +  migrationDist +  lnPopDens95,
+                         data2 %>% filter((data2$suitableCells == 25) &
+                                          (data2$totalPop95 >= 3000)),
                          fixed_effects = ~countryCode,
                          se_type = "stata")
 ```
@@ -1252,8 +1302,9 @@ sizePercentile <- quantile(data222$area, probs = seq(0, 1, length.out = 101))
 data222[, "sizePerc"] <- factor(cut(data222$area, sizePercentile))
 
 # NOTE: need to put the size percentile in manually, else doesn't work
-robust2.2.2 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +  avgPrecip + avgTemp +
-                         lnArea + seaDist + waterArea +  withinCountry +  numCountry +  migrationDist + 
+robust2.2.2 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSuitable +
+                         avgPrecip + avgTemp + lnArea + seaDist + waterArea +
+                         withinCountry +  numCountry +  migrationDist + 
                          lnPopDens95 + sizePerc,
                          data = data222,
                          # fixed_effects = ~ c(countryCode, sizePerc),
@@ -1268,9 +1319,11 @@ summary(robust2.2.2)
 OK
 
 ```{r model2.2.3Rob, results='hide', echo=F, eval=T}
-robust2.2.3 <- lm_robust(lnLang ~ absLat + dispElev + dispSuitable + avgElev + avgSuitable +  avgPrecip + avgTemp +  lnArea + 
-                         seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
-                         data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 3000)),
+robust2.2.3 <- lm_robust(lnLang ~ absLat + dispElev + dispSuitable + avgElev + avgSuitable +
+                         avgPrecip + avgTemp +  lnArea + seaDist + waterArea +
+                         withinCountry +  numCountry +  migrationDist +  lnPopDens95,
+                         data2 %>% filter((data2$suitableCells >= 10) &
+                                          (data2$totalPop95 >= 3000)),
                          fixed_effects = ~countryCode,
                          se_type = "stata")
 ```
@@ -1285,9 +1338,11 @@ Very good match!
 
 
 ```{r model2.2.4Rob, results='hide', echo=F, eval=T}
-robust2.2.4 <- lm_robust(lnLang ~ absLat + sdElev + sdClimate + avgElev + climate +  avgPrecip + avgTemp +  lnArea + 
-                         seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
-                         data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 3000)),
+robust2.2.4 <- lm_robust(lnLang ~ absLat + sdElev + sdClimate + avgElev + climate +  avgPrecip +
+                         avgTemp +  lnArea + seaDist + waterArea +
+                         withinCountry +  numCountry +  migrationDist +  lnPopDens95,
+                         data2 %>% filter((data2$suitableCells >= 10) &
+                                          (data2$totalPop95 >= 3000)),
                          fixed_effects = ~countryCode,
                          se_type = "stata")
 ```
@@ -1301,9 +1356,11 @@ Not that good
 
 
 ```{r model2.2.5Rob, results='hide', echo=F, eval=T}
-robust2.2.5 <- lm_robust(lnLang ~ absLat + sdElev + sdSoil + avgElev + soil +  avgPrecip + avgTemp +  lnArea + 
-                         seaDist + waterArea +  withinCountry +  numCountry +  migrationDist +  lnPopDens95,
-                         data2 %>% filter((data2$suitableCells >= 10) & (data2$totalPop95 >= 3000)),
+robust2.2.5 <- lm_robust(lnLang ~ absLat + sdElev + sdSoil + avgElev + soil +  avgPrecip +
+                         avgTemp +  lnArea + seaDist + waterArea +  withinCountry +
+                         numCountry +  migrationDist +  lnPopDens95,
+                         data2 %>% filter((data2$suitableCells >= 10) &
+                                            (data2$totalPop95 >= 3000)),
                          fixed_effects = ~countryCode,
                          se_type = "stata")
 ```
@@ -1356,7 +1413,8 @@ for (model in models) {
   estimRows <- !is.na(tbl5bformat[, model]) & (tbl5bformat$stat == 'Estimate')
   seRows <- !is.na(tbl5bformat[, model]) & (tbl5bformat$stat == 'SE')
 
-  tbl5bformat[estimRows, model] <- sprintf(fmt = "%.3f", tbl5bformat[estimRows, model] %>% unlist() %>% as.numeric())
+  tbl5bformat[estimRows, model] <- sprintf(fmt = "%.3f", tbl5bformat[estimRows, model] %>%
+                                             unlist() %>% as.numeric())
   tbl5bformat[seRows, model] <- paste0("(", sprintf(fmt = "%.3f", tbl5bformat[seRows, model]
                                              %>% unlist() 
                                              %>% as.numeric()), ")")
@@ -1364,8 +1422,10 @@ for (model in models) {
   significant <- rep(pvalsDf[, model] < .01, each = 2)
   significant[is.na(significant)] <- FALSE
   
-  tbl5bformat[estimRows, model] <- cell_spec(tbl5bformat[estimRows, model], italic = significant[estimRows])
-  tbl5bformat[seRows, model] <- cell_spec(tbl5bformat[seRows, model], italic = significant[seRows])
+  tbl5bformat[estimRows, model] <- cell_spec(tbl5bformat[estimRows, model],
+                                             italic = significant[estimRows])
+  tbl5bformat[seRows, model] <- cell_spec(tbl5bformat[seRows, model],
+                                          italic = significant[seRows])
 }
 
 tbl5bformat$name <- c('Variation in elevation', NA, 'Variation in land quality', NA,
@@ -1381,7 +1441,8 @@ tbl5bformat %>%
              col.names = col.names, 
              row.names = F,
              align = "r", escape = F,
-             caption = "Table 5B—Robustness Checks for the Virtual Country Analysis. Italics indicate significance at the 1\\% level.")  %>%
+             caption = cat("Table 5B—Robustness Checks for the Virtual Country Analysis.", 
+                           "Italics indicate significance at the 1\\% level."))  %>%
   row_spec(seq(2, nrow(tbl5bformat), 2), font_size = 8)
 
 ```
@@ -1419,7 +1480,7 @@ tbl5binfo %>%
 \newpage
 # Appendix: code
 <!-- NOTE: add code chunks to be displayed here -->
-```{r codeAppendix, ref.label=c('dataImport1', 'rename1', 'greeceNepal', 'worldMap', 'summary', 'standardize1', 'model1.1', 'model1.2', 'model1.3', 'model1.4', 'model1.5', 'tbl1', 'tbl1Print', 'tbl1Info', 'resid1', 'model1.1Rob', 'model1.2Rob', 'model1.3Rob', 'model1.4Rob', 'data_import2b', 'model1.2.1', 'model1.2.2', 'model1.2.3', 'model1.2.4', 'model1.2.5', 'model1.2.6', 'model1.2.7', 'dataImport2', 'rename2', 'model2.1', 'model2.2', 'model2.3', 'model2.4', 'model2.5', 'model2.6', 'model2.7', 'tbl4', 'tbl4Print', 'tbl4Info', 'model2.1.1Rob', 'model2.1.2Rob', 'model2.1.3Rob', 'model2.2.1Rob', 'model2.2.2Rob', 'model2.2.3Rob', 'model2.2.4Rob', 'model2.2.5Rob'), echo=T, eval=F}
+```{r codeAppendix, ref.label=c('dataImport1', 'rename1', 'greeceNepal', 'worldMap', 'summary', 'standardize1', 'model1.1', 'model1.2', 'model1.3', 'model1.4', 'model1.5', 'tbl1', 'tbl1Print', 'tbl1Info', 'resid1', 'model1.1Rob', 'model1.2Rob', 'model1.3Rob',  'model1.4Rob', 'tbl2a', 'tbl2aPrint', 'tbl2aInfo', 'data_import2b', 'model1.2.1', 'model1.2.2', 'model1.2.3', 'model1.2.4', 'model1.2.5', 'model1.2.6', 'model1.2.7', 'tbl2b', 'tbl2bPrint', 'tbl2bInfo', 'dataImport2', 'rename2', 'model2.1', 'model2.2', 'model2.3', 'model2.4', 'model2.5', 'model2.6', 'model2.7', 'tbl4', 'tbl4Print', 'tbl4Info', 'model2.1.1Rob', 'model2.1.2Rob', 'model2.1.3Rob', 'tbl5a', 'tbl5aPrint', 'tbl5aInfo', 'model2.2.1Rob', 'model2.2.2Rob', 'model2.2.3Rob', 'model2.2.4Rob', 'model2.2.5Rob', 'tbl5b', 'tbl5bPrint', 'tbl5bInfo'), echo=T, eval=F}
 
 ```
 
