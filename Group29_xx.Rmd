@@ -141,7 +141,7 @@ colnames(data) = c('countryCode', 'entryYear', 'countryName', 'avgTemp',
 
 ## Paper Summary
 
-The paper by Michalopoulos [@michalopoulos_origins_2012] aims to explain ethnolinguistic diversity within and across countries by assuming that a proxy quantity—the number of languages per square kilometer—is determined by a selection of various economic, historical, andgeographic variables. It determines that *variation in regional land quality* and *variation in elevation* are the most significant determinants of linguistic diversity. The hypothesis underpinning this examination is that differences in local land characteristics induce different levels of human capital across locations, which in turn, gives rise to localized ethnicities that are characterized by separate languages. The results of the empirical study presented are found to be consistent with this hypothesis.
+The paper by Michalopoulos [@michalopoulos_origins_2012] aims to explain ethnolinguistic diversity within and across countries by assuming that a proxy quantity—the number of languages per square kilometer—is determined by a selection of various economic, historical, and geographic variables. It determines that *variation in regional land quality* and *variation in elevation* are the most significant determinants of linguistic diversity. The hypothesis underpinning this examination is that differences in local land characteristics induce different levels of human capital across locations, which in turn, gives rise to localized ethnicities that are characterized by separate languages. The results of the empirical study presented are found to be consistent with this hypothesis.
 
 The empirical results are obtained separately by three regressions:  
 
@@ -199,7 +199,7 @@ legend(
 )
 ```
 
-Table \ref{tab:summaryPrint} shows summary statistics of important variables for the first model. The dependent variable is `numLang`, which is the number of languages whose "traditional homeland" intersects with the country's boundary. Additional covariates are measures of centrality and variablity of the geographic data, the log of the country's 1995 population, human migration distance from Africa, and distance from a large body of water. While some other variables in the provided dataset have missing values for some countries, note that all variables included in the first regression are known for all countries.  
+Table \ref{tab:summaryPrint} shows summary statistics of important variables for the first model. The dependent variable is `numLang`, which is the number of languages whose "traditional homeland" intersects with the country's boundary. Additional covariates are measures of centrality and variability of the geographic data, the log of the country's 1995 population, human migration distance from Africa, and distance from a large body of water. While some other variables in the provided dataset have missing values for some countries, note that all variables included in the first regression are known for all countries.  
 
 ```{r summary, results='hide', echo=F}
 count = function(x) {
@@ -416,7 +416,7 @@ tbl1info %>%
 ```
 
 The interpretation of these results is much the same as in the original paper. In all four models, variation in elevation, and variation in land quality were useful predictors of the log number of languages, as originally hypothesized by the author.
-The effects of the geographic variables are also noteworthy. Naturally, the effect of absolute latitude becomes insignificant once precipitation and temperature are introduced, as those two are highly correlated with distance from the equator. Between models 1.1 and 1.2, and also 1.2 and 1.3, the observed $R^2$ makes sizeable jumps, indicating that these geographic features are very useful in explaining linguistic diversity. About the distance distance from sea coefficient, the author has this intruiging interpretation:
+The effects of the geographic variables are also noteworthy. Naturally, the effect of absolute latitude becomes insignificant once precipitation and temperature are introduced, as those two are highly correlated with distance from the equator. Between models 1.1 and 1.2, and also 1.2 and 1.3, the observed $R^2$ makes sizable jumps, indicating that these geographic features are very useful in explaining linguistic diversity. About the distance distance from sea coefficient, the author has this intriguing interpretation:
 
 > ... areas that are increasingly isolated from the sea have been experiencing limited population mixing and thus should, on average, display higher ethnolinguistic fractionalization. It should be noted, however, that mean distance from the coast also captures the vulnerability of different areas to both the incidence and the intensity of invasion and colonization. Thus, the coefficient should be interpreted cautiously.
 
@@ -1126,8 +1126,8 @@ A real world explanation is that the densely-populated regions in the tropics ar
 Kenya), where some of the downsides of the climate (such as malaria, etc.) are mitigated. Since densely populated, urban 
 areas usually correspond to a lesser number of separate ethnic groups, the sign of the coefficient is less surprising: for there
 to be a variation in elevation, one needs to have some elevation in the region in the first place.
-<!-- NOTE: this is quite well studied, so it's not that surprising. If you have a high degree of urbanization in the tropics - ie high pop density -->
-<!-- it's gonna be at higher altitudes. This holds for africa and south america (cf Bolivia) -->
+<!-- NOTE: this is quite well studied, so it's not that surprising. If you have a high degree of urbanization in the tropics - i.e. high pop density -->
+<!-- it's gonna be at higher altitudes. This holds for Africa and south america (cf Bolivia) -->
 
 
 <!-- \newpage -->
@@ -1348,7 +1348,7 @@ much fewer ethnic groups than WLMS does languages.
 Table \ref{tab:tbl5bInfo} shows the $R^2$ coefficient for the regressions. The values are comparable to the best models
 in the initial set of regressions. The best performing model in terms of this metric is the second one, which includes 
 fixed-effects that take the country size into consideration. This implies that while it still holds that the two variations
-are the biggest explanatory factors for etholinguistic diversity, the dynamics themselves are not completely invariant
+are the biggest explanatory factors for ethnolinguistic diversity, the dynamics themselves are not completely invariant
 to the size of the (virtual) country.
 
 
