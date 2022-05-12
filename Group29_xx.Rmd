@@ -526,7 +526,7 @@ names(pvals) <- models
 pvalsDf <- data.frame(row.names = vars)
 for(model in models) pvalsDf[names(pvals[[model]]), model] <- pvals[[model]]
 
-order = c('sdElev', 'sdSuitable', 'dispElev', 'dispSuitable', 'sdClimate',
+order <-c('sdElev', 'sdSuitable', 'dispElev', 'dispSuitable', 'sdClimate',
           'climate', 'sdSoil', 'soil')
 
 coeffDf <- coeffDf[order, ]
@@ -736,7 +736,7 @@ names(pvals) <- models
 pvalsDf <- data.frame(row.names = vars)
 for(model in models) pvalsDf[names(pvals[[model]]), model] <- pvals[[model]]
 
-order = c('sd_emean', 'sd_climsuit', 'emean', 'mean_climsuit', 'abs_lat',
+order <-c('sd_emean', 'sd_climsuit', 'emean', 'mean_climsuit', 'abs_lat',
           'precav', 'tempav', 'lnareakm2', 'distc', 'migdist', 'lnpop95', 'lpd1500',
           'yrentry', 'agritran')
 
@@ -1150,7 +1150,7 @@ names(pvals) <- models
 pvalsDf <- data.frame(row.names = vars)
 for(model in models) pvalsDf[names(pvals[[model]]), model] <- pvals[[model]]
 
-order = c('sdElev', 'sdSuitable')
+order <-c('sdElev', 'sdSuitable')
 
 coeffDf <- coeffDf[order, ]
 sesDf   <- sesDf[order, ]
@@ -1218,7 +1218,7 @@ tbl5ainfo %>%
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE,
                col.names = c('Model', 'Country Indicators', 'Observations', '$R^2$', "Log pseudolikelihood"),
                escape = F,
-               caption = "Information for each model in Table 2A: cross-country robustness check")
+               caption = "Information for each model in Table 5A: cross-country robustness check")
 ```
 
 
@@ -1237,7 +1237,7 @@ robust2.2.1 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSu
                          se_type = "stata")
 ```
 
-```{r model2.2.1RobTable, results='show', echo=F, eval=T}
+```{r model2.2.1RobTable, results='show', echo=F, eval=F}
 summary(robust2.2.1)
 ```
 
@@ -1261,7 +1261,7 @@ robust2.2.2 <- lm_robust(lnLang ~ absLat + sdElev + sdSuitable + avgElev + avgSu
                          se_type = "stata")
 ```
 
-```{r model2.2.2RobTable, results='show', echo=F, eval=T}
+```{r model2.2.2RobTable, results='show', echo=F, eval=F}
 summary(robust2.2.2)
 ```
 
@@ -1275,7 +1275,7 @@ robust2.2.3 <- lm_robust(lnLang ~ absLat + dispElev + dispSuitable + avgElev + a
                          se_type = "stata")
 ```
 
-```{r model2.2.3RobTable, results='show', echo=F, eval=T}
+```{r model2.2.3RobTable, results='show', echo=F, eval=F}
 summary(robust2.2.3)
 ```
 
@@ -1292,7 +1292,7 @@ robust2.2.4 <- lm_robust(lnLang ~ absLat + sdElev + sdClimate + avgElev + climat
                          se_type = "stata")
 ```
 
-```{r model2.2.4RobTable, results='show', echo=F, eval=T}
+```{r model2.2.4RobTable, results='show', echo=F, eval=F}
 summary(robust2.2.4)
 ```
 
@@ -1308,15 +1308,13 @@ robust2.2.5 <- lm_robust(lnLang ~ absLat + sdElev + sdSoil + avgElev + soil +  a
                          se_type = "stata")
 ```
 
-```{r model2.2.5RobTable, results='show', echo=F, eval=T}
+```{r model2.2.5RobTable, results='show', echo=F, eval=F}
 summary(robust2.2.5)
 ```
 
-```{r tbl5b, results='hide', echo=F, eval=F}
+```{r tbl5b, results='hide', echo=F, eval=T}
 models <- paste0("robust2.2.", 1:5)
-coeffs <- c(list(setNames(robust2.1.1$beta, robust2.1.1$coefnames)[-1]),
-            lapply(models[-1], function(model) { get(model)[["coefficients"]]})
-            )
+coeffs <- c(lapply(models, function(model) { get(model)[["coefficients"]]}) )
 names(coeffs) <- models
 
 vars <- unique(unlist(lapply(coeffs, names)))
@@ -1324,21 +1322,18 @@ vars <- unique(unlist(lapply(coeffs, names)))
 coeffDf <- data.frame(row.names = vars)
 for(model in models) coeffDf[names(coeffs[[model]]), model] <- coeffs[[model]]
 
-ses <- c(list(sqrt(diag(robust2.1.1$var))[-1]),
-         sapply(models[-1], function(model) get(model)["std.error"])
-        )
+ses <- sapply(models, function(model) get(model)["std.error"])
 names(ses) <- models
 sesDf <- data.frame(row.names = vars)
 for(model in models) sesDf[names(ses[[model]]), model] <- ses[[model]]
 
-pvals <- c(list(setNames(summary(robust2.1.1)[[5]], robust2.1.1$coefnames)[-1]),
-           sapply(models[-1], function(model) get(model)["p.value"])
-        )
+pvals <- sapply(models, function(model) get(model)["p.value"])
 names(pvals) <- models
 pvalsDf <- data.frame(row.names = vars)
 for(model in models) pvalsDf[names(pvals[[model]]), model] <- pvals[[model]]
 
-order = c('sdElev', 'sdSuitable')
+order <- c('sdElev', 'sdSuitable', 'dispElev', 'dispSuitable', 'sdClimate',
+           'climate', 'sdSoil', 'soil')
 
 coeffDf <- coeffDf[order, ]
 sesDf   <- sesDf[order, ]
@@ -1347,66 +1342,68 @@ pvalsDf <- pvalsDf[order, ]
 # interleave rows
 coeffDf[, "stat"] <- "Estimate"
 sesDf[, "stat"] <- "SE"
-tbl5a <- gdata::interleave(coeffDf, sesDf)
+tbl5b <- gdata::interleave(coeffDf, sesDf)
 ```
 
 `TODO: figure out better table placements`
 \newpage
 
-```{r tbl5bPrint, results='show', echo=F, eval=F}
+```{r tbl5bPrint, results='show', echo=F, eval=T}
 # ensure a hard copy
-tbl5aformat <- data.frame(tbl5a)
+tbl5bformat <- data.frame(tbl5b)
 
 for (model in models) {
-  estimRows <- !is.na(tbl5aformat[, model]) & (tbl5aformat$stat == 'Estimate')
-  seRows <- !is.na(tbl5aformat[, model]) & (tbl5aformat$stat == 'SE')
+  estimRows <- !is.na(tbl5bformat[, model]) & (tbl5bformat$stat == 'Estimate')
+  seRows <- !is.na(tbl5bformat[, model]) & (tbl5bformat$stat == 'SE')
 
-  tbl5aformat[estimRows, model] <- sprintf(fmt = "%.3f", tbl5aformat[estimRows, model] %>% unlist() %>% as.numeric())
-  tbl5aformat[seRows, model] <- paste0("(", sprintf(fmt = "%.3f", tbl5aformat[seRows, model]
+  tbl5bformat[estimRows, model] <- sprintf(fmt = "%.3f", tbl5bformat[estimRows, model] %>% unlist() %>% as.numeric())
+  tbl5bformat[seRows, model] <- paste0("(", sprintf(fmt = "%.3f", tbl5bformat[seRows, model]
                                              %>% unlist() 
                                              %>% as.numeric()), ")")
   
   significant <- rep(pvalsDf[, model] < .01, each = 2)
   significant[is.na(significant)] <- FALSE
   
-  tbl5aformat[estimRows, model] <- cell_spec(tbl5aformat[estimRows, model], italic = significant[estimRows])
-  tbl5aformat[seRows, model] <- cell_spec(tbl5aformat[seRows, model], italic = significant[seRows])
+  tbl5bformat[estimRows, model] <- cell_spec(tbl5bformat[estimRows, model], italic = significant[estimRows])
+  tbl5bformat[seRows, model] <- cell_spec(tbl5bformat[seRows, model], italic = significant[seRows])
 }
 
-tbl5aformat$name <- c('Variation in elevation', NA, 'Variation in land quality', NA)
+tbl5bformat$name <- c('Variation in elevation', NA, 'Variation in land quality', NA,
+                      'Dispersion of elevation', NA, 'Dispersion of land quality', NA,
+                      'Variation in climatic suitability', NA, 'Mean climatic suitability', NA,
+                      'Variation in soil suitability', NA, 'Mean soil suitability', NA)
 
-col.names <- c("Variable", "Negative binomial", "OLS1", "OLS2")
+col.names <- c("Variable", paste0("(", 1:5, ")"))
 
-tbl5aformat %>% 
-  select(name, 1:3, -stat) %>%
+tbl5bformat %>% 
+  select(name, 1:5, -stat) %>%
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, linesep = c("", "\\addlinespace"),
              col.names = col.names, 
              row.names = F,
              align = "r", escape = F,
-             caption = "Table 5A—Robustness Checks for the Virtual Country Analysis. Italics indicate significance at the 1\\% level.")  %>%
-  row_spec(seq(2, nrow(tbl5aformat), 2), font_size = 8)
+             caption = "Table 5B—Robustness Checks for the Virtual Country Analysis. Italics indicate significance at the 1\\% level.")  %>%
+  row_spec(seq(2, nrow(tbl5bformat), 2), font_size = 8)
 
 ```
 
-```{r tbl5bInfo, results='show', echo=F, eval=F}
-tbl5ainfo <- data.frame(
-  model = 1:3,
-  cont = rep("Yes", 3),
+```{r tbl5bInfo, results='show', echo=F, eval=T}
+tbl5binfo <- data.frame(
+  model = 1:5,
+  cont = rep("Yes", 5),
   nobs = sapply(c("robust2.1.1glm", models[-1]), function(model) { nobs(get(model))}),
   rsq = c("-", lapply(models[-1], function(model) {
     formatC(
       summary(get(model))$r.squared
       , digits = 2, format = 'f')
     })) %>% unlist,
-  loglik = c(formatC(robust2.1.1glm$twologlik / 2, digits = 2, format = 'f'), rep("-", 2)),
   row.names = NULL
   )
 
-tbl5ainfo %>% 
+tbl5binfo %>% 
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE,
-               col.names = c('Model', 'Country Indicators', 'Observations', '$R^2$', "Log pseudolikelihood"),
+               col.names = c('Model', 'Country Indicators', 'Observations', '$R^2$'),
                escape = F,
-               caption = "Information for each model in Table 2A: cross-country robustness check")
+               caption = "Information for each model in Table 5B: cross-country robustness check")
 ```
 
 
