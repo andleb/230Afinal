@@ -32,6 +32,7 @@ always_allow_html: true
 
 ```{r setup, echo = FALSE, message=FALSE, warning=FALSE}
 library(conflicted)
+library(gdata)
 library(MASS)
 library(sandwich)
 library(lmtest)
@@ -443,6 +444,7 @@ abline(0, 0)
 lines(y, y * residModel$coefficients['y'], col = 'red', type = 'l')
 ```
 
+\newpage
 
 # Robustness Check of Analysis 1
 
@@ -455,7 +457,7 @@ robust1.1 <- glm.nb(numLang ~ absLat + sdSuitable + sdElev + avgElev + avgSuitab
                     , data, na.action = na.exclude)
 ```
 
-```{r model1.1RobTable, results='show', echo=F, eval=T}
+```{r model1.1RobTable, results='show', echo=F, eval=F}
 summary(robust1.1)
 ```
 NOTE: Matches!
@@ -469,7 +471,7 @@ robust1.2 <- lm(lnLang ~ absLat + dispElev + dispSuitable + avgElev + avgSuitabl
                     
 ```
 
-```{r model1.2RobTable, results='show', echo=F, eval=T}
+```{r model1.2RobTable, results='show', echo=F, eval=F}
 summary(robust1.2)
 ```
 NOTE: matches or exceeds in significance, as well
@@ -482,7 +484,7 @@ robust1.3 <- lm(lnLang ~ absLat + sdElev + sdClimate + avgElev + climate + avgPr
                     
 ```
 
-```{r model1.3RobTable, results='show', echo=F, eval=T}
+```{r model1.3RobTable, results='show', echo=F, eval=F}
 summary(robust1.3)
 ```
 
@@ -500,7 +502,7 @@ robust1.4 <- lm(lnLang ~ absLat + sdElev + sdSoil + avgElev + soil + avgPrecip +
                     
 ```
 
-```{r model1.4RobTable, results='show', echo=F, eval=T}
+```{r model1.4RobTable, results='show', echo=F, eval=F}
 summary(robust1.4)
 ```
 NOTE: matches!
@@ -532,43 +534,52 @@ order = c('sdElev', 'sdSuitable', 'dispElev', 'dispSuitable', 'sdClimate',
 coeffDf <- coeffDf[order, ]
 sesDf   <- sesDf[order, ]
 pvalsDf <- pvalsDf[order, ]
+
+# interleave rows
+coeffDf[, "stat"] <- "Estimate"
+sesDf[, "stat"] <- "SE"
+tbl2a <- gdata::interleave(coeffDf, sesDf)
 ```
 
 ```{r tbl2aPrint, results='show', echo=F}
-tbl1format = data.frame(tbl1)
+# ensure a hard copy
+tbl2aformat <- data.frame(tbl2a)
 
 for (model in models) {
-  estimRows = !is.na(tbl1[, model]) & (tbl1$stat == 'Estimate')
-  seRows = !is.na(tbl1[, model]) & (tbl1$stat == 'SE')
+  estimRows <- !is.na(tbl2aformat[, model]) & (tbl2aformat$stat == 'Estimate')
+  seRows <- !is.na(tbl2aformat[, model]) & (tbl2aformat$stat == 'SE')
 
-  tbl1format[estimRows, model] = sprintf(fmt = "%.3f", tbl1[estimRows, model] %>% unlist() %>% as.numeric())
-  tbl1format[seRows, model] = paste0("(", sprintf(fmt = "%.3f", tbl1[seRows, model] %>% unlist() %>% as.numeric()), ")")
+  tbl2aformat[estimRows, model] <- sprintf(fmt = "%.3f", tbl2aformat[estimRows, model] %>% unlist() %>% as.numeric())
+  tbl2aformat[seRows, model] <- paste0("(", sprintf(fmt = "%.3f", tbl2aformat[seRows, model]
+                                             %>% unlist() 
+                                             %>% as.numeric()), ")")
   
-  significant = rep(pvalsPivoted[, model] < .01, each = 2)
-  significant[is.na(significant)] = FALSE
-  tbl1format[estimRows, model] = cell_spec(tbl1format[estimRows, model], italic = significant[estimRows])
-  tbl1format[seRows, model] = cell_spec(tbl1format[seRows, model], italic = significant[seRows])
+  significant <- rep(pvalsDf[, model] < .01, each = 2)
+  significant[is.na(significant)] <- FALSE
+  
+  tbl2aformat[estimRows, model] <- cell_spec(tbl2aformat[estimRows, model], italic = significant[estimRows])
+  tbl2aformat[seRows, model] <- cell_spec(tbl2aformat[seRows, model], italic = significant[seRows])
 }
 
-tbl1format$name = c('Variation in elevation', NA, 'Variation in land quality', NA,
-                    'Mean elevation', NA, 'Mean land quality', NA,
-                    'Absolute latitude', NA, 'Mean precipitation', NA,
-                    'Mean temperature', NA, 'Ln(Area)', NA,
-                    'Distance from the sea', NA, 'Migratory distance from Ethiopia', NA,
-                    'Ln(Population density in 1995)', NA, 'Ln(Population density in 1500)', NA,
-                    'Year of independence', NA, 'Timing of transition to agriculture', NA
-                    )
+tbl2aformat$name <- c('Variation in elevation', NA, 'Variation in land quality', NA,
+                    'Dispersion of elevation', NA, 'Dispersion of land quality', NA,
+                    'Variation in climatic suitability', NA, 'Mean climatic suitability', NA,
+                    'Variation in soil suitability', NA, 'Mean soil suitability', NA)
 
-col.names = c("Variable", paste0("(", 1:5, ")"))
+col.names <- c("Variables", "Negative binomial", "OLS1", "OLS2", "OLS3")
 
-tbl1format %>% select(8, 2:6) %>%
+tbl2aformat %>% 
+  select(name, 1:4, -stat) %>%
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, linesep = c("", "\\addlinespace"),
-             col.names = col.names, align = "r", escape = F,
-             caption = 'Main specification for the cross-country analysis. Italics indicate significance at the 1\\% level.') %>%
-  row_spec(seq(2, 28, 2), font_size = 8)
+             col.names = col.names, 
+             row.names = F,
+             align = "r", escape = F,
+             caption = 'Table 2A—Robustness Checks for the Cross-Country Analysis. Italics indicate significance at the 1\\% level.')  %>%
+  row_spec(seq(2, nrow(tbl2aformat), 2), font_size = 8)
+
 ```
 
-```{r tbl2aInfo, results='show', echo=F}
+```{r tbl2aInfo, results='show', echo=F, eval=F}
 tbl1info = data.frame(
   model = 1:5,
   cont = c("No", "No", "No", "No", "Yes"),
