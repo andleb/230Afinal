@@ -199,7 +199,9 @@ legend(
 )
 ```
 
-Table \ref{tab:summaryPrint} shows summary statistics of important variables for the first model. The dependent variable is `numLang`, which is the number of languages whose "traditional homeland" intersects with the country's boundary. Additional covariates are measures of centrality and variability of the geographic data, the log of the country's 1995 population, human migration distance from Africa, and distance from a large body of water. While some other variables in the provided dataset have missing values for some countries, note that all variables included in the first regression are known for all countries.  
+Table \ref{tab:summaryPrint} shows summary statistics of important variables for the first model. The dependent variable is `numLang`, which is the number of languages whose "traditional homeland" intersects with the country's boundary. Additional covariates are measures of centrality and variability of the geographic data, the log of the country's 1995 population, human migration distance from Africa, and the distance from a large body of water. 
+While some other variables in the provided dataset have missing values for some countries, we note that all variables
+included in the first regression are known for all countries.  
 
 ```{r summary, results='hide', echo=F}
 count = function(x) {
@@ -268,7 +270,7 @@ The first model regresses the (log) number of languages within each country on t
 \ln\left(\text{numLang}_i\right) = \beta_0 + \beta_1*\text{absLat}_i + \beta_2*\text{sdElev}_i + \beta_3*\text{sdSuitable}_i + \beta_4* X_i + \epsilon_i
 \end{equation}
 
-The first model only includes absolute latitude, the second model adds the mean and standard deviation of both elevation and land quality within each country, and the remaining models add additional covariates $X_i$.
+The first model only includes absolute latitude, the second model adds the mean and standard deviation of both elevation and land quality within each country, and the remaining models add additional covariates represented by $X_i$.
 
 ## Statement of Assumptions
 
@@ -280,7 +282,9 @@ Thus, the only maintained  assumptions are that the linear form in \ref{eq:model
 
 ## Replication
 
-As the code and the data files were provided completely by the author, we were able to replicate the results perfectly. Table \ref{tab:tbl1Print} perfectly replicates Table 1 in the original paper, and Table \ref{tab:tbl1Info} displays additional information about each model. Note that all variables, including indicators, were standardized by Michalopolous, so we did so here as well. As mentioned above, the reported standard errors are follow the EHW formula, with HC1 correction, so they are generally slightly wider than what one would get from a homoskedastic model. Unsurprisingly, given the increasing number of features, the observed $R^2$ also increases with each model.
+As the code and the data files were provided completely by the author, we were able to replicate the results perfectly. Table \ref{tab:tbl1Print} perfectly replicates Table 1 in the original paper, and Table \ref{tab:tbl1Info} displays additional information about each model. Note that all variables, including indicators, were standardized by Michalopolous, so we did so here as well. As mentioned above, the reported standard errors follow the EHW formula with HC1 correction,
+so they are generally slightly larger than those one would obtain from a homoskedastic model. Unsurprisingly, given the
+increasing number of features, the observed $R^2$ also increases with each model.
 
 ```{r standardize1, echo=F}
 standardize = function(vec) {return ((vec - mean(vec, na.rm = TRUE)) / sd(vec, na.rm = TRUE))}
@@ -415,39 +419,50 @@ tbl1info %>%
                caption = "Information for each model in cross-country analysis.")
 ```
 
-The interpretation of these results is much the same as in the original paper. In all four models, variation in elevation, and variation in land quality were useful predictors of the log number of languages, as originally hypothesized by the author.
-The effects of the geographic variables are also noteworthy. Naturally, the effect of absolute latitude becomes insignificant once precipitation and temperature are introduced, as those two are highly correlated with distance from the equator. Between models 1.1 and 1.2, and also 1.2 and 1.3, the observed $R^2$ makes sizable jumps, indicating that these geographic features are very useful in explaining linguistic diversity. About the distance distance from sea coefficient, the author has this intriguing interpretation:
+The interpretation of these results is much the same as in the original paper. In all four models, variation in elevation and variation in land quality were useful predictors of the log number of languages, as originally hypothesized by the author.
+The effects of the geographic variables are also noteworthy. Naturally, the effect of absolute latitude becomes insignificant once precipitation and temperature are introduced, as those two are highly correlated with distance from the equator. Between models 1.1 and 1.2, and also 1.2 and 1.3, the observed $R^2$ makes sizable jumps, indicating that these geographic features are very useful in explaining linguistic diversity. About the distance distance from the sea coefficient, the author has this intriguing interpretation:
 
 > ... areas that are increasingly isolated from the sea have been experiencing limited population mixing and thus should, on average, display higher ethnolinguistic fractionalization. It should be noted, however, that mean distance from the coast also captures the vulnerability of different areas to both the incidence and the intensity of invasion and colonization. Thus, the coefficient should be interpreted cautiously.
 
 As the coefficient was never much more than one standard error above zero anyway, it is easy to ignore this effect entirely.
 
-The final model introduces variables related to a country's history. The log of population density in 1500 does have a significant effect (at larger thresholds), and the author suggests "conditional on geographic characteristics, contemporary ethnic diversity may have been influenced by a country’s historical levels of development." 
+The final model introduces variables related to a country's history. The log of population density in 1500 does have a significant effect (at larger thresholds), and the author suggests "conditional on geographic characteristics, contemporary ethnic diversity may have been influenced by a country’s historical levels of development." A mechanism that would track with this explanation is that the time of transition to a "modern" nation state, which
+necessarily reduces the ethnic diversity of a country, is naturally tied with its historic development level.
 
-<!-- # NOTE: I actually don't agree with this conclusion - density 1500 is proxy for early transition to "modernity' (Belgium, North Italy etc) which drastically centralized ethnic identities. For example, the majority of France didn't understand "french" until the revolution. -->
+<!-- # NOTE: I actually don't agree with the below conclusion - density 1500 is proxy for early transition to "modernity' (Belgium, North Italy etc) which drastically centralized ethnic identities. For example, the majority of France didn't understand "french" until the revolution. 
+Added explanation above-->
 
-However, the other features entered here are insignificant, and even the sign of the density coefficient goes against intuition. It seems more natural that countries that were denser in 1500 would have greater ethnolinguistic diversity today, simply due to having more people to split, yet the model suggests the opposite. It could also be that this new feature is simply taking the effect of the 1990 density feature, as the two are very strongly correlated. Therefore, we consider it unlikely that such "historical levels of development" have much effect on modern diversity.
+However, it would also seem plausible that countries that were denser in 1500 would have greater ethnolinguistic diversity today, 
+simply due to having more people to split. It could also be that this new feature is simply "stealing" the effect of the 1990 density feature,
+as the two are very strongly correlated. Therefore, we consider it questionable that such "historical levels of development" have much effect on modern diversity.
 
-Another thing to note is that we noticed some inaccuracies with the provided years of independence. For example, the United States was listed as 1816, as opposed to 1776 or 1783. Other long-existing countries, such as Portugal and Denmark, were also given this 1816 value. Additionally, former Soviet republics were all (correctly) given a year of 1991, further emphasizing that independence year in general is almost arbitrary—it would have been surprising if it had a significant relationship with the outcome.
+Another thing to note is that we noticed some inaccuracies with the provided years of independence. For example, the United States was listed as 1816, as opposed to 1776 or 1783. Other long-existing countries, such as Portugal and Denmark, were also given this 1816 value. Additionally, former Soviet republics were all (correctly) given a year of 1991, despite many of those having been independent countries with established notions of ethnic identity 
+long before being absorbed into the Soviet Union. This further emphasizes that independence year in general is almost arbitrary — 
+it would have been surprising if it had a significant relationship with the outcome. 
 
-Finally, the author includes five dummy variables in the last regression that map to the continent the country is located
+Finally, the author includes five indicator variables in the last regression that map to the continent the country is located
 in. This is done in an attempt to better model both geographic (the author mentions Africa as being less geographically
 varying as a whole), as well as continent-wide historic effects.
 
+
+
 ## Critique of Assumptions
+
 
 As stated before, this model only requires two main assumptions:
 
 1. The functional form of \ref{eq:model1} is correct.
 2. The error terms are independent.
 
-Both assumptions are hard to take fully for granted. Starting with the second, it is likely that there is some spatial correlation between neighboring countries, leading to dependence among the error terms. However, such correlation could have already been sufficiently modeled by including geographic features such as migration distance and average temperature. Additionally, the virtual country analysis, which we will reanalyze in Section \ref{virtual}, shows that the results of the model still hold after abstracting away from established country boundaries.
+Both assumptions are hard to take fully for granted. Starting with the second, it is likely that there is some spatial correlation between neighboring countries, leading to dependence among the error terms. However, such correlation could have already been sufficiently modeled by including geographic features such as migration distance and average temperature. Additionally, the virtual country analysis, which we will reanalyze in Section \ref{virtual}, shows that the results of the model still hold after abstracting away the established country boundaries.
 
-To informally test the whether or not the linearity assumption holds, Figure \ref{fig:resid1} shows the residual plot for the fifth model. While there is no curved relationship in the plot, it is clear that the residuals tend to increase as the dependent variable increases. This means that there is likely some other feature or combination of features which significantly impacts the log number of languages, which this model does not include. The residuals for the fifth model are what is plotted, but given it is the most specified model, it is expected that residual plots for the other models would look even worse.
+To informally test the whether or not the linearity assumption holds, Figure \ref{fig:resid1} shows the residual plot for the fifth model. While there is no curved relationship in the plot, it is clear that the residuals tend to increase as the dependent variable increases. This means that there is likely some other feature or combination of features which significantly impacts the log number of languages, which this model does not include.
+While we only show the residuals for the fifth model, but given it is the best specified model, it is expected that the
+residual plots for the other models would look even worse.
 
 Somewhat coincidentally, the residuals do look roughly homoskedastic, even though that assumption was relaxed. Another diagnostic plot that is commonly used is a Normal Q-Q plot of the residuals, but as this model does not require normality, we will not include such a plot here.
 
-```{r resid1, fig.cap="\\label{fig:resid1} Residual Plot for Model 1.5", echo=F, fig.width = 6.5, fig.height=3}
+```{r resid1, fig.cap="\\label{fig:resid1} Residual Plot for Model 1.5", echo=F, fig.width = 6.5, fig.height=4}
 yhat = model1.5$residuals
 y = model1.5$model$lnLang
 plot(y, yhat, xlab = "", ylab = "", cex.axis = .75)
