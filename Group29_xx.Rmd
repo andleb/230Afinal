@@ -18,7 +18,7 @@ geometry: margin=1in
 output:
   pdf_document:
     # TODO: enable for the final writeup
-    toc: no
+    toc: yes
     number_sections: true
     df_print: kable
 papersize: a4
@@ -85,8 +85,6 @@ options(knitr.kable.NA = '')
 # define my_theme - append here
 my_theme <- theme_minimal()
 ```
-
-`r #TODO: margins, font size, group name & name in upper right`
 
 <!-- LaTeX preamble -->
 \newcommand{\E}{{\mathbb E}}
@@ -541,7 +539,6 @@ robust1.4 <- lm(lnLang ~ absLat + sdElev + sdSoil + avgElev + soil + avgPrecip +
 summary(robust1.4)
 ```
 
-
 ```{r tbl2a, results='hide', echo=F}
 models <- paste0("robust1.", 1:4)
 coeffs <- lapply(models, function(model) {coeftest(get(model),
@@ -577,8 +574,6 @@ coeffDf[, "stat"] <- "Estimate"
 sesDf[, "stat"] <- "SE"
 tbl2a <- gdata::interleave(coeffDf, sesDf)
 ```
-
-`TODO: figure out better table placements`
 
 ```{r tbl2aPrint, results='show', echo=F}
 # ensure a hard copy
@@ -667,12 +662,15 @@ Mira* (Atlas of the World's Nations) in the first three columns. Additionally, c
 the land suitability metric used in the initial model.
 
 Of note here is that, absent a continental fixed-effect variable, the variation in elevation coefficient actually flips 
-its sign while becoming insignificant, while the situation is again reversed once the fixed effect is introduced.
-
-`TODO: describe columns better`
+its sign while becoming insignificant, while the situation is again reversed once the fixed effect is introduced. This
+seems to track with the author's explanation that Africa, for example, is less varying in elevation in general, so the 
+numerical effect of the latter needs to be adjusted per-continent.
 
 In columns 4-7, the same metric is reconstructed from the *Ethnologue* dataset using increasing fineness in defining 
-ethnolinguistic groups via the aggregation of language trees.
+ethnolinguistic groups via the aggregation of language trees. Despite the introduction of additional geographic features,
+the variations in elevation and land quality remain highly significant. Additionally, fractionalization is found to be
+positively impacted by the average amount of precipitation a country receives and its distance from the coast, while
+latitude and migratory distance from East Africa impact it negatively.
 
 The replication again obtains complete agreement in the values, confidence intervals, and the $R^2$ coefficient with the 
 published results. The noticeably small values of $R^2$ across the models perhaps indicate faults with the dependent variable;
@@ -799,8 +797,6 @@ coeffDf[, "stat"] <- "Estimate"
 sesDf[, "stat"] <- "SE"
 tbl2b <- gdata::interleave(coeffDf, sesDf)
 ```
-
-`TODO: figure out better table placements`
 
 ```{r tbl2bPrint, results='show', echo=F, eval=T}
 # ensure a hard copy
