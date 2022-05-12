@@ -492,14 +492,14 @@ variations in climatic and soil suitability, respectively. These are isolated co
 metric used in the original regression.
 
 All the regressions in this table include the continental fixed effects mentioned previously. 
-The regressions with alternative covariates confirm that the variation in land quality (or it's counterpart) is the most
+The regressions with alternative covariates confirm that the variation in land quality (or its counterpart) is the most
 impactful factor in determining ethnolinguistic diversity within a country. Furthermore, our replication finds the published
 results to hold exactly.
 
-Table \ref{tab:tbl2aInfo} summarizes the control groups used in the robustness check regressions. Interestingly,
-the finding are robust to the substitution of the most important covariates with alternative measures, since the $R^2$ 
-coefficient matches that of the last regression in the original analysis, and is completely stable across all comparable
-models using alternative covariates.
+Table \ref{tab:tbl2aInfo} summarizes the control groups used and the results of the robustness check regressions. Interestingly,
+the findings are robust to the substitution of the most important covariates with alternative measures, since the $R^2$ 
+coefficient matches that of the last regression in the original analysis (with the same number of covariates),
+and is completely stable across all comparable models using alternative covariates.
 
 
 
@@ -671,7 +671,7 @@ data2bStd <- data2b %>% mutate(across(! all_of(notStdized) , standardize))
 ```
 
 Table \ref{tab:tbl2bPrint} introduces a new dependent variable in place of the (logarithm) of the languages spoken -
-*ELF - Etnolinguistic fractionalization*. This is the probability that two randomly drawn individuals would belong to
+*ELF - Ethnolinguistic fractionalization*. This is the probability that two randomly drawn individuals would belong to
 different enthnolinguistic groups and is taken from an updated version of an old Soviet work - *Atlas Narodov
 Mira* (Atlas of the World's Nations) in the first three columns. Additionally, climatic data is again used in lieu of 
 the land suitability metric used in the initial model.
@@ -689,8 +689,8 @@ latitude and migratory distance from East Africa impact it negatively.
 
 The replication again obtains complete agreement in the values, confidence intervals, and the $R^2$ coefficient with the 
 published results. The noticeably small values of $R^2$ across the models perhaps indicate faults with the dependent variable;
-for the latter columns, this is a largely arbitrary level of aggregation in clustering trees, so it's unsurprising the agreement
-represented by $R^2$ even decreases in comparison to the third column using the "original" ELF.
+for the latter columns, this is a largely arbitrary level of aggregation in the clustering trees, so it's unsurprising the agreement
+represented by $R^2$ can even decrease in comparison to the third column using the "original" ELF.
 
 
 
@@ -894,7 +894,7 @@ Fortunately, we stumbled across the *Geo-referencing of Ethnic Groups* (GREG) da
 The original GREG dataset required some manipulation to get it in a format suitable to swap in for the WLMS. Each polygon 
 was labeled with up to three ethnic groups, so we had to melt and then dissolve the polygons such that each polygon represented only one ethnic group, and each ethnic group was only assigned to one polygon. For details, see the appendix which shows the geoprocessing steps performed with the `geopandas` module in Python.
 
-In the original paper, Michalopolous described the steps he took to filter the virtual countries on criteria mostly based on the amount of "coverage" each country had in the WLMS data. If a large portion of a virtual country was an area which contained no languages—for example, the Sahara Desert—that virtual country was excluded from the analysis. The public data download, which contained the virtual countries after this filter had been applied, contained 1,888 virtual countries. Due to differences in coverage between WLMS and GREG, applying the same criteria to GREG would have resulted in 2,476 countries. Including these additional countries would have required obtaining the other features for these areas, and as Michalopolous did not document this procedure well, we decided that this was not feasible. The end result was that our dataset only included the intersection of the sets derived WLMS and GREG, which excluded the ~600 countries from the dataset derived from GREG, but also about 30 countries that had enough coverage in WLMS, but did not in GREG.
+In the original paper, Michalopolous described the steps he took to filter the virtual countries on criteria mostly based on the amount of "coverage" each country had in the WLMS data. If a large portion of a virtual country was an area that contained no languages — for example, the Sahara Desert — that virtual country was excluded from the analysis. The public data download, which contained the virtual countries after this filter had been applied, contained 1,888 virtual countries. Due to differences in coverage between WLMS and GREG, applying the same criteria to GREG would have resulted in 2,476 countries. Including these additional countries would have required obtaining the other features for these areas, and as Michalopolous did not document this procedure well, we decided that this was not feasible. The end result was that our dataset only included the intersection of the sets derived WLMS and GREG, which excluded the ~600 countries from the dataset derived from GREG, but also about 30 countries that had enough coverage in WLMS, but did not in GREG.
 
 Finally, the actual regressions performed in the paper used a dataset that was further filtered down. That is, there must have been at least 3000 people living in the virtual country in 1995, and at least 10 of the 25 cells that comprise a virtual country had to have been completely covered by the WLMS dataset. We applied both of these criteria here as well when reproducing the regressions.
 
@@ -1129,20 +1129,22 @@ Additionally, models 2.4 through 2.7 include a fixed effect for each country. Ag
 
 ## Comparison
 
-One major difference between GREG and WLMS is that the footprint of each unique ethnic group in GREG are larger than that for each unique language in the WLMS. This makes sense, considering that GREG only contains about 900 entries, yet there are a few thousand unique languages in the WLMS. As a result, the dependent variable is generally a lot smaller in our replication compared to that in the original paper. Michalopolous reports the median number of languages per virtual country as 3, yet here, more than half of the virtual countries contain only one ethnic group. A possible solution to adjust for this would be to simply reduce the size of the virtual countries, but this was infeasible due to our inability to recalculate the rest of the features.
+One major difference between GREG and WLMS is that the footprint of each unique ethnic group in GREG is larger than that for each unique language in the WLMS. This makes sense considering that GREG only contains about 900 entries, yet there are a few thousand unique languages in the WLMS. As a result, the dependent variable is generally a lot smaller in our replication compared to that in the original paper. Michalopolous reports the median number of languages per virtual country as 3, yet here, more than half of the virtual countries contain only one ethnic group. A possible solution to adjust for this would be to simply reduce the size of the virtual countries, but this was infeasible due to our inability to recalculate the rest of the features.
 
-As for the actual results, the first noticeable difference is that in the $R^2$ coefficients. In all models, the $R^2$ is considerably lower in our replication compared to the original, although the differences are smaller for the models including country fixed effects. For example, absolute latitude on its own explains just 4% of the variation in log number of ethnic groups, compared to 31% in the original. However, the coefficient is still significant at the 1% level
+As for the actual results, the first noticeable difference in the $R^2$ coefficients. In all models, the $R^2$ is considerably lower in our replication compared to the original, although the differences are smaller for the models including country fixed effects. For example, absolute latitude on its own explains just 4% of the variation in log number of ethnic groups, compared to 31% in the original. However, the coefficient is still significant at the 1% level
 and has a negative sign, as it does in the original.
 
-Beyond the worse fits overall, the inference around the coefficients does not differ much between the two models. If a variable is significant at the 1% level in one model, there is a good chance it is significant at at least the 5% or 10% level in its counterpart, or vice versa. Variation in elevation and variation in land quality continue to have a large relationship with the outcome, leading further evidence to the author's original hypothesis. The number of real countries intersected by a virtual country is also a really strong predictor in both sets of models. Michalopolous ponders that this "may be suggestive of the effect of state formation on ethnic diversity and/or an artifact of modern states having drawn political borders along ethnic boundaries." This certainly seems reasonable, but given how diminished the effects of some of the other variables are in our replication, it is surprising that this one is still so large. Perhaps this is another artifact of the aforementioned reduced granularity of GREG compared to WLMS: ethnic groups are even more strongly correlated with national boundaries than languages are.
+Beyond the worse fits overall, the inference around the coefficients does not differ much between the two models. If a variable is significant at the 1% level in one model, there is a good chance it is significant at at least the 5% or 10% level in its counterpart, or vice versa. Variation in elevation and variation in land quality continue to have a large relationship with the outcome, lending further evidence to the author's original hypothesis. The number of real countries intersected by a virtual country is also a really strong predictor in both sets of models. Michalopolous ponders that this "may be suggestive of the effect of state formation on ethnic diversity and/or an artifact of modern states having drawn political borders along ethnic boundaries." This certainly seems reasonable, but given how diminished the effects of some of the other variables are in our replication, it is surprising that this one is still so large. Perhaps this is another artifact of the aforementioned reduced granularity of GREG compared to WLMS: ethnic groups are even more strongly correlated with national boundaries than languages are.
 
 However, there are a few noteworthy inconsistencies. One is that distance from the sea is significant for every model here, but only for model 2.5 (tropical locations) in the original. Another oddity of the tropical model is that the sign for variation in elevation flips to negative, and log of population density becomes a strong predictor. One reason for this could be differences in how virtual countries in tropical areas were filtered in the GREG dataset compared to WLMS.
-A real world explanation is that the densely-populated regions in the tropics are usually found at higher altitudes (e.g., in 
+An alternative, real world, explanation is that the densely-populated regions in the tropics are usually found at higher altitudes (e.g., in 
 Kenya), where some of the downsides of the climate (such as malaria, etc.) are mitigated. Since densely populated, urban 
-areas usually correspond to a lesser number of separate ethnic groups, the sign of the coefficient is less surprising: for there
-to be a variation in elevation, one needs to have some elevation in the region in the first place.
+areas usually correspond to a lessened number of separate ethnic groups, the sign of the coefficient is less surprising; for there
+to be a variation in elevation, one needs to have some elevation in the region in the first place, so the tropical regions without
+such better habitable areas are not affected.
 <!-- NOTE: this is quite well studied, so it's not that surprising. If you have a high degree of urbanization in the tropics - i.e. high pop density -->
-<!-- it's gonna be at higher altitudes. This holds for Africa and south america (cf Bolivia) -->
+<!-- it's gonna be at higher altitudes. This holds for Africa and south america (cf Bolivia)
+"Nairobi/Elevation 1,795 m With an elevation of 5,889 feet above sea level, the area was chosen as a stopover point due to its cool temperature ..."-->
 
 
 <!-- \newpage -->
@@ -1153,28 +1155,28 @@ to be a variation in elevation, one needs to have some elevation in the region i
 ## Robustness Check 1
 
 Table \ref{tab:tbl5aPrint} shows the first series of robustness checks for our second model. The starting point for all 
-is regression 2.4 in the previous section; only the usual two most decisive covariates are shown however (as in the original
+is regression 2.4 in the previous section; only the usual two most decisive covariates are shown, however (as in the original
 work). 
 
 The first regression is, similarly as in the first model, a negative binomial. To obtain the cluster-robust standard error,
-we use the `geem` routing from the eponymous package. The clusters are again defined to be real-world countries in
+we use the `geem` routine from the eponymous package. The clusters are again defined to be real-world countries in
 which the centroid of each virtual country falls. However, the routine does not include an optimization subroutine for 
 the dispersion parameter. Thus, the negative binomial regression is first performed with the usual `glm` call to obtain
 the MLE for the dispersion parameter, which is then plugged into the `geem` call as a given.
 
 The second and third are robust OLS (`lm_robust` from `estimatr`) regressions against the log of the number of ethnic groups 
-in the country. The variation here is that the second one includes all virtual countries irrespective of their population
+in the country. The change here is that the second one includes all virtual countries irrespective of their population
 (the original filtered them by having at least 3000 inhabitants), while the third ups that threshold to 50000 inhabitants.
 
 The original paper also included two additional regressions, which filtered the original dependent variable - the number
 of speakers - by size. Since we don't have that data and are using a substitute variable - the number of ethnic groups - 
-we were unable to replicate those two regressions. All the regressions included the per-country fixed-effect variables.
+we were unable to replicate those two regressions. All the regressions include the per-country fixed-effect variables.
 
 The results show a very good match in terms of both the significance and magnitude of the two variables under consideration
 for the two ordinary least squares regressions, while the negative binomial one is less able to reproduce the significance
 obtained from using the WLMS dataset. The $R^2$ coefficients (c.f. Table \ref{tab:tbl5aInfo}) are, 
 while again lower than in the original, still reasonably high. The higher likelihood of the negative binomial when compared
-to the original is likely mostly due to the lesser number of observations, and should not be taken as very authoritative.
+to the original is likely mostly due to the lower number of observations and should not be taken as very authoritative.
 
 Nonetheless, the robustness checks on an alternative dataset seem to confirm the strong relationship these two 
 explanatory variables have with ethnolinguistic diversity.
@@ -1342,17 +1344,17 @@ tbl5ainfo %>%
 
 Table \ref{tab:tbl5bPrint} presents the results of the second series of robustness checks on the second model. All are 
 ordinary least squares regressions with per-country fixed effects, while the errors reported are cluster-robust. 
-As in section \ref{tab:tbl2bPrint}, the two most important covariates - the variations in elevation and land quality - are 
-substituted first with their dispersions and the latter subsequently with its component parts.
+As in section [Table 2B], the two most important covariates - the variations in elevation and land quality - are 
+substituted first with their dispersions, and the latter subsequently with its component parts.
 
 The first regression is identical to regression 2.4 in the previous section in terms of covariates, but the data is filtered
 so only the virtual countries which have complete coverage on all of their underlying 25 cells are included. 
 
 The second regression adds an additional fixed effect for each percentile of the size distribution of the virtual countries:
-we can stipulate this is to better capture the case if the dynamics are not stable across varying orders of magnitude in 
+we can stipulate that this is to better capture the case if the dynamics are not stable across varying orders of magnitude in 
 country size.
 
-Regressions 3 - 5 follow section [Table 2B] in their choice of the substitutions for the two most important covariates:
+As mentioned, regressions 3 - 5 follow section [Table 2B] in their choice of the substitutions for the two most important covariates:
 dispersions instead of variations, and climatic and soil suitability instead of the overall composite metric.
 All regressions include per-country fixed effects.
 
@@ -1361,8 +1363,8 @@ is found to be less significant in regressions 1 and 4. This might be attributed
 much fewer ethnic groups than WLMS does languages.
 
 Table \ref{tab:tbl5bInfo} shows the $R^2$ coefficient for the regressions. The values are comparable to the best models
-in the initial set of regressions. The best performing model in terms of this metric is the second one, which includes 
-fixed-effects that take the country size into consideration. This implies that while it still holds that the two variations
+in the initial set of regressions. The best-performing model in terms of this metric is the second one, which includes 
+fixed-effects that take the country size into consideration. This implies that, while it still holds that the two variations
 are the biggest explanatory factors for ethnolinguistic diversity, the dynamics themselves are not completely invariant
 to the size of the (virtual) country.
 
@@ -1568,7 +1570,7 @@ leading to a separate sense of ethnic belonging.
 
 ```
 
-
+## GREG preprocessing
 
 
 
