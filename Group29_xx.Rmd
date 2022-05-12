@@ -380,7 +380,7 @@ tbl1format$name = c('Variation in elevation', NA, 'Variation in land quality', N
                     'Mean elevation', NA, 'Mean land quality', NA,
                     'Absolute latitude', NA, 'Mean precipitation', NA,
                     'Mean temperature', NA, 'Ln(Area)', NA,
-                    'Distance from the sea', NA, 'Migratory distance from Ethiopia', NA,
+                    'Distance from the sea', NA, 'Migratory distance from East Africa', NA,
                     'Ln(Population density in 1995)', NA, 'Ln(Population density in 1500)', NA,
                     'Year of independence', NA, 'Timing of transition to agriculture', NA
                     )
@@ -443,8 +443,6 @@ residModel = lm(yhat ~ y)
 abline(0, 0)
 lines(y, y * residModel$coefficients['y'], col = 'red', type = 'l')
 ```
-
-\newpage
 
 # Robustness Check of Analysis 1
 
@@ -541,6 +539,9 @@ sesDf[, "stat"] <- "SE"
 tbl2a <- gdata::interleave(coeffDf, sesDf)
 ```
 
+`TODO: figure out better table placements`
+\newpage
+
 ```{r tbl2aPrint, results='show', echo=F}
 # ensure a hard copy
 tbl2aformat <- data.frame(tbl2a)
@@ -566,7 +567,7 @@ tbl2aformat$name <- c('Variation in elevation', NA, 'Variation in land quality',
                     'Variation in climatic suitability', NA, 'Mean climatic suitability', NA,
                     'Variation in soil suitability', NA, 'Mean soil suitability', NA)
 
-col.names <- c("Variables", "Negative binomial", "OLS1", "OLS2", "OLS3")
+col.names <- c("Variable", "Negative binomial", "OLS1", "OLS2", "OLS3")
 
 tbl2aformat %>% 
   select(name, 1:4, -stat) %>%
@@ -579,21 +580,28 @@ tbl2aformat %>%
 
 ```
 
-```{r tbl2aInfo, results='show', echo=F, eval=F}
-tbl1info = data.frame(
-  model = 1:5,
-  cont = c("No", "No", "No", "No", "Yes"),
+```{r tbl2aInfo, results='show', echo=F, eval=T}
+tbl2ainfo <-  data.frame(
+  model = 1:4,
+  cont = c("Yes", "Yes", "Yes", "Yes"),
   nobs = sapply(models, function(model) { nobs(get(model))}),
-  rsq = sapply(models, function(model) {
-    formatC(summary(get(model))$r.squared, digits = 2, format = 'f')
-    }), row.names = NULL
+  rsq = c("-", lapply(models[-1], function(model) {
+    formatC(
+      summary(get(model))$r.squared
+      , digits = 2, format = 'f')
+    })) %>% unlist,
+  loglik = c(formatC(robust1.1$twologlik / 2, digits = 2, format = 'f'), rep("-", 3)),
+  row.names = NULL
   )
-tbl1info %>% 
+
+tbl2ainfo %>% 
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE,
-               col.names = c('Model', 'Continental Indicators', 'Observations', '$R^2$'), escape = F,
-               caption = "Information for each model in cross-country analysis.")
+               col.names = c('Model', 'Continental Indicators', 'Observations', '$R^2$', "Log pseudolikelihood"),
+               escape = F,
+               caption = "Information for each model in Table 2A: cross-country robustness check")
 ```
 
+\newpage
 
 ## Table 2B
 
@@ -618,7 +626,7 @@ robust1.2.1 <- lm(elf ~ abs_lat, data2bStd, na.action = na.exclude)
 
 ```
 
-```{r model1.2.1Table, results='show', echo=F, eval=T}
+```{r model1.2.1Table, results='show', echo=F, eval=F}
 summary(robust1.2.1)
 ```
 
@@ -630,7 +638,7 @@ robust1.2.2 <- lm(elf ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit
 
 ```
 
-```{r model1.2.2Table, results='show', echo=F, eval=T}
+```{r model1.2.2Table, results='show', echo=F, eval=F}
 summary(robust1.2.2)
 ```
 OK
@@ -644,7 +652,7 @@ robust1.2.3 <- lm(elf ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit
 
 ```
 
-```{r model1.2.3Table, results='show', echo=F, eval=T}
+```{r model1.2.3Table, results='show', echo=F, eval=F}
 summary(robust1.2.3)
 ```
 OK
@@ -657,7 +665,7 @@ robust1.2.4 <- lm(elf3 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsui
 
 ```
 
-```{r model1.2.4Table, results='show', echo=F, eval=T}
+```{r model1.2.4Table, results='show', echo=F, eval=F}
 summary(robust1.2.4)
 ```
 
@@ -671,7 +679,7 @@ robust1.2.5 <- lm(elf5 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsui
 
 ```
 
-```{r model1.2.5Table, results='show', echo=F, eval=T}
+```{r model1.2.5Table, results='show', echo=F, eval=F}
 summary(robust1.2.5)
 ```
 
@@ -686,7 +694,7 @@ robust1.2.6 <- lm(elf7 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsui
 
 ```
 
-```{r model1.2.6Table, results='show', echo=F, eval=T}
+```{r model1.2.6Table, results='show', echo=F, eval=F}
 summary(robust1.2.6)
 ```
 
@@ -701,13 +709,112 @@ robust1.2.7 <- lm(elf9 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsui
 
 ```
 
-```{r model1.2.Table, results='show', echo=F, eval=T}
+```{r model1.2.Table, results='show', echo=F, eval=F}
 summary(robust1.2.7)
 ```
 
-`TODO: Print Table`
-
 OK
+
+
+```{r tbl2b, results='hide', echo=F, eval=T}
+models <- paste0("robust1.2.", 1:7)
+coeffs <- lapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 1]})
+names(coeffs) <- models
+
+vars <- unique(unlist(lapply(coeffs, names)))
+
+coeffDf <- data.frame(row.names = vars)
+for(model in models) coeffDf[names(coeffs[[model]]), model] <- coeffs[[model]]
+
+ses <- lapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 2]})
+names(ses) <- models
+sesDf <- data.frame(row.names = vars)
+for(model in models) sesDf[names(ses[[model]]), model] <- ses[[model]]
+
+pvals <- lapply(models, function(model) {coeftest(get(model), vcov = vcovHC(get(model), "HC1"))[, 4]})
+names(pvals) <- models
+pvalsDf <- data.frame(row.names = vars)
+for(model in models) pvalsDf[names(pvals[[model]]), model] <- pvals[[model]]
+
+order = c('sd_emean', 'sd_climsuit', 'emean', 'mean_climsuit', 'abs_lat',
+          'precav', 'tempav', 'lnareakm2', 'distc', 'migdist', 'lnpop95', 'lpd1500',
+          'yrentry', 'agritran')
+
+coeffDf <- coeffDf[order, ]
+sesDf   <- sesDf[order, ]
+pvalsDf <- pvalsDf[order, ]
+
+# interleave rows
+coeffDf[, "stat"] <- "Estimate"
+sesDf[, "stat"] <- "SE"
+tbl2b <- gdata::interleave(coeffDf, sesDf)
+```
+
+`TODO: figure out better table placements`
+\newpage
+
+```{r tbl2bPrint, results='show', echo=F, eval=T}
+# ensure a hard copy
+tbl2bformat <- data.frame(tbl2b)
+
+for (model in models) {
+  estimRows <- !is.na(tbl2bformat[, model]) & (tbl2bformat$stat == 'Estimate')
+  seRows <- !is.na(tbl2bformat[, model]) & (tbl2bformat$stat == 'SE')
+
+  tbl2bformat[estimRows, model] <- sprintf(fmt = "%.3f", tbl2bformat[estimRows, model] %>% unlist() %>% as.numeric())
+  tbl2bformat[seRows, model] <- paste0("(", sprintf(fmt = "%.3f", tbl2bformat[seRows, model]
+                                             %>% unlist() 
+                                             %>% as.numeric()), ")")
+  
+  significant <- rep(pvalsDf[, model] < .01, each = 2)
+  significant[is.na(significant)] <- FALSE
+  
+  tbl2bformat[estimRows, model] <- cell_spec(tbl2bformat[estimRows, model], italic = significant[estimRows])
+  tbl2bformat[seRows, model] <- cell_spec(tbl2bformat[seRows, model], italic = significant[seRows])
+}
+
+tbl2bformat$name <- c('Variation in elevation', NA, 'Variation in climatic suitability', NA,
+                    'Mean elevation', NA, 'Mean climatic suitability', NA,
+                    'Absolute latitude', NA, 'Mean precipitation', NA,
+                    'Mean temperature', NA, 'Ln(area)', NA,
+                    'Distance from the sea', NA, 'Migratory distance from East Africa', NA,
+                    'Ln(Population density in 1995)', NA, 'Ln(Population density in 1500)', NA,
+                    'Year of independence', NA, 'Timing of transition to agriculture', NA
+                    )
+
+col.names <- c("Variable", paste0("(", 1:7, ")"))
+
+tbl2bformat %>% 
+  select(name, 1:7, -stat) %>%
+  knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, linesep = c("", "\\addlinespace"),
+             col.names = col.names, 
+             row.names = F,
+             align = "r", escape = F,
+             caption = 'Table 2B—Linguistic Fractionalization across Countries. Italics indicate significance at the 1\\% level.')  %>%
+  row_spec(seq(2, nrow(tbl2bformat), 2), font_size = 8)
+
+```
+
+```{r tbl2bInfo, results='show', echo=F, eval=T}
+tbl2binfo <-  data.frame(
+  model = 1:7,
+  cont = c(rep("No", 2), rep("Yes", 5)),
+  nobs = sapply(models, function(model) { nobs(get(model))}),
+  rsq = sapply(models, function(model) {
+    formatC(summary(get(model))$r.squared, digits = 2, format = 'f')
+    }),
+  row.names = NULL
+  )
+
+tbl2binfo %>% 
+  knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE,
+               col.names = c('Model', 'Continental Indicators', 'Observations', '$R^2$'),
+               escape = F,
+               row.names = F,
+               caption = "Information for each model in Table 2B: Linguistic Fractionalization across Countries")
+```
+
+\newpage
 
 # Analysis 2: Virtual Country (Re-Analysis)  \label{virtual}
 

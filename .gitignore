@@ -44,3 +44,5 @@ vignettes/*.pdf
 
 .~lock*
 *.log
+/altData/GREG.zip
+/altData/groups.xls
