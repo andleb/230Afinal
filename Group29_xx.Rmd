@@ -475,7 +475,8 @@ The second robustness check substitutes the measure of variance - standard devia
 the minimum and maximum values.
 
 The third and fourth columns attempt to substitute the variation in land quality with alternative metrics: the means and
-variations in climatic and soil suitability, respectively. 
+variations in climatic and soil suitability, respectively. These are isolated components of the composite land suitability
+metric used in the original regression.
 
 All the regressions in this table include the continental fixed effects mentioned previously. 
 The regressions with alternative covariates confirm that the variation in land quality (or it's counterpart) is the most
@@ -660,20 +661,22 @@ data2bStd <- data2b %>% mutate(across(! all_of(notStdized) , standardize))
 ```
 
 Table \ref{tab:tbl2bPrint} introduces a new dependent variable in place of the (logarithm) of the languages spoken -
-*ELF - Etnolinguistic fractionalization*.  This is taken from an updated version of an old Soviet work - *Atlas Narodov
-Mira* (Atlas of the World's Nations). 
+*ELF - Etnolinguistic fractionalization*. This is the probability that two randomly drawn individuals would belong to
+different enthnolinguistic groups and is taken from an updated version of an old Soviet work - *Atlas Narodov
+Mira* (Atlas of the World's Nations) in the first three columns. Additionally, climatic data is again used in lieu of 
+the land suitability metric used in the initial model.
 
-In columns 4-7, the same metric is reconstructed from the *Ethnologue* dataset using splitting rules of increasing fineness
-for constructed language trees.
+Of note here is that, absent a continental fixed-effect variable, the variation in elevation coefficient actually flips 
+its sign while becoming insignificant, while the situation is again reversed once the fixed effect is introduced.
 
-It also substitutes the measures of land suitability discussed above with their climatic counterpart, used in the previous
-robustness check.
-
+In columns 4-7, the same metric is reconstructed from the *Ethnologue* dataset using increasing fineness in defining 
+ethnolinguistic groups via the aggregation of language trees.
 
 The replication again obtains complete agreement in the values, confidence intervals, and the $R^2$ coefficient with the 
-published results.
+published results. The noticeably small values of $R^2$ across the models perhaps indicate faults with the dependent variable;
+for the latter columns, this is a largely arbitrary level of aggregation in clustering trees, so it's unsurprising the agreement
+represented by $R^2$ even decreases in comparison to the third column using the "original" ELF.
 
-The noticeably small values of $R^2$ across the models indicate that ...
 
 
 
@@ -686,7 +689,6 @@ robust1.2.1 <- lm(elf ~ abs_lat, data2bStd, na.action = na.exclude)
 summary(robust1.2.1)
 ```
 
-OK
 
 ```{r model1.2.2, results='hide', echo=F, eval=T}
 robust1.2.2 <- lm(elf ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit,
@@ -697,7 +699,6 @@ robust1.2.2 <- lm(elf ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit
 ```{r model1.2.2Table, results='show', echo=F, eval=F}
 summary(robust1.2.2)
 ```
-OK
 
 
 ```{r model1.2.3, results='hide', echo=F, eval=T}
@@ -711,7 +712,6 @@ robust1.2.3 <- lm(elf ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit
 ```{r model1.2.3Table, results='show', echo=F, eval=F}
 summary(robust1.2.3)
 ```
-OK
 
 ```{r model1.2.4, results='hide', echo=F, eval=T}
 robust1.2.4 <- lm(elf3 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit + 
@@ -725,8 +725,6 @@ robust1.2.4 <- lm(elf3 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsui
 summary(robust1.2.4)
 ```
 
-OK
-
 ```{r model1.2.5, results='hide', echo=F, eval=T}
 robust1.2.5 <- lm(elf5 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit + 
                   precav + tempav + lnareakm2 + distc + migdist + lnpop95 + lpd1500 + yrentry +
@@ -738,9 +736,6 @@ robust1.2.5 <- lm(elf5 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsui
 ```{r model1.2.5Table, results='show', echo=F, eval=F}
 summary(robust1.2.5)
 ```
-
-OK
-
 
 ```{r model1.2.6, results='hide', echo=F, eval=T}
 robust1.2.6 <- lm(elf7 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit + 
@@ -754,9 +749,6 @@ robust1.2.6 <- lm(elf7 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsui
 summary(robust1.2.6)
 ```
 
-OK
-
-
 ```{r model1.2.7, results='hide', echo=F, eval=T}
 robust1.2.7 <- lm(elf9 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsuit + 
                   precav + tempav + lnareakm2 + distc + migdist + lnpop95 + lpd1500 + yrentry +
@@ -768,9 +760,6 @@ robust1.2.7 <- lm(elf9 ~ abs_lat + sd_emean + sd_climsuit + emean + mean_climsui
 ```{r model1.2.Table, results='show', echo=F, eval=F}
 summary(robust1.2.7)
 ```
-
-OK
-
 
 ```{r tbl2b, results='hide', echo=F, eval=T}
 models <- paste0("robust1.2.", 1:7)
@@ -875,7 +864,7 @@ tbl2binfo %>%
                caption = "Information for each model in Table 2B: Linguistic Fractionalization across Countries")
 ```
 
-\newpage
+<!-- \newpage -->
 
 # Analysis 2: Virtual Country (Re-Analysis)  \label{virtual}
 
@@ -1132,7 +1121,7 @@ Beyond the worse fits overall, the inference around the coefficients does not di
 
 However, there are a few noteworthy inconsistencies. One is that distance from the sea is significant for every model here, but only for model 2.5 (tropical locations) in the original. Another oddity of the tropical model is that the sign for variation in elevation flips to negative, and log of population density becomes a strong predictor. Without speculating on real-world phenomena, one reason for this could be differences in how virtual countries in tropical areas were filtered in the GREG dataset compared to WLMS.
 
-\newpage
+<!-- \newpage -->
 
 
 # Robustness Check for Analysis 2
@@ -1242,7 +1231,7 @@ tbl5a <- gdata::interleave(coeffDf, sesDf)
 ```
 
 `TODO: figure out better table placements`
-\newpage
+<!-- \newpage -->
 
 ```{r tbl5aPrint, results='show', echo=F, eval=T}
 # ensure a hard copy
@@ -1438,7 +1427,7 @@ tbl5b <- gdata::interleave(coeffDf, sesDf)
 ```
 
 `TODO: figure out better table placements`
-\newpage
+<!-- \newpage -->
 
 ```{r tbl5bPrint, results='show', echo=F, eval=T}
 # ensure a hard copy
