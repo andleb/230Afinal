@@ -396,8 +396,7 @@ col.names = c("Variable", paste0("(", 1:5, ")"))
 tbl1format %>% select(8, 2:6) %>%
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, linesep = c("", "\\addlinespace"),
              col.names = col.names, align = "r", escape = F,
-             caption = cat('Main specification for the cross-country analysis.",
-             Italics indicate significance at the 1\\% level.')) %>%
+             caption = "Main specification for the cross-country analysis. Italics indicate significance at the 1\\% level.") %>%
   row_spec(seq(2, 28, 2), font_size = 8)
 ```
 
@@ -589,8 +588,7 @@ tbl2aformat %>%
              col.names = col.names, 
              row.names = F,
              align = "r", escape = F,
-             caption = cat('Table 2A—Robustness Checks for the Cross-Country Analysis.,
-                           "Italics indicate significance at the 1\\% level.'))  %>%
+             caption = "Table 2A—Robustness Checks for the Cross-Country Analysis. Italics indicate significance at the 1\\% level.")  %>%
   row_spec(seq(2, nrow(tbl2aformat), 2), font_size = 8)
 
 ```
@@ -812,8 +810,7 @@ tbl2bformat %>%
              col.names = col.names, 
              row.names = F,
              align = "r", escape = F,
-             caption = cat('Table 2B—Linguistic Fractionalization across Countries.",
-                           "Italics indicate significance at the 1\\% level.'))  %>%
+             caption = "Table 2B—Linguistic Fractionalization across Countries. Italics indicate significance at the 1\\% level.")  %>%
   row_spec(seq(2, nrow(tbl2bformat), 2), font_size = 8)
 
 ```
@@ -834,8 +831,7 @@ tbl2binfo %>%
                col.names = c('Model', 'Continental Indicators', 'Observations', '$R^2$'),
                escape = F,
                row.names = F,
-               caption = cat("Information for each model in Table 2B:",
-                             "Linguistic Fractionalization across Countries"))
+               caption = "Information for each model in Table 2B: Linguistic Fractionalization across Countries")
 ```
 
 \newpage
@@ -1052,8 +1048,7 @@ col.names = c("Variable", paste0("(", 1:7, ")"))
 tbl4format %>% select(10, 2:8) %>%
   knitr::kable(toprule = '', bottomrule = '', booktabs = TRUE, linesep = c("", "\\addlinespace"),
              col.names = col.names, align = "r", escape = F,
-             caption = cat('Main specification for the virtual country analysis.",
-                           "Italics indicate significance at the 1\\% level.')) %>%
+             caption = "Main specification for the virtual country analysis. Italics indicate significance at the 1\\% level.") %>%
   row_spec(seq(2, 28, 2), font_size = 8)
 ```
 
@@ -1241,8 +1236,7 @@ tbl5aformat %>%
              col.names = col.names, 
              row.names = F,
              align = "r", escape = F,
-             caption = cat("Table 5A—Robustness Checks for the Virtual Country Analysis.", 
-                           "Italics indicate significance at the 1\\% level."))  %>%
+             caption = "Table 5A—Robustness Checks for the Virtual Country Analysis. Italics indicate significance at the 1\\% level.")  %>%
   row_spec(seq(2, nrow(tbl5aformat), 2), font_size = 8)
 
 ```
@@ -1441,8 +1435,7 @@ tbl5bformat %>%
              col.names = col.names, 
              row.names = F,
              align = "r", escape = F,
-             caption = cat("Table 5B—Robustness Checks for the Virtual Country Analysis.", 
-                           "Italics indicate significance at the 1\\% level."))  %>%
+             caption = "Table 5B—Robustness Checks for the Virtual Country Analysis. Italics indicate significance at the 1\\% level.")  %>%
   row_spec(seq(2, nrow(tbl5bformat), 2), font_size = 8)
 
 ```
